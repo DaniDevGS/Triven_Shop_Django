@@ -1,28 +1,314 @@
-Actua como un desarrollador Full Stack y quita porfavor la parte de Valoración minima sin afectar al resto del diseño, solamente quita eso. No hagas mas cambios ademas no quites los comentarios porfavor
+Porque me da este error?
 
-tienda.html
+Página no encontrada (404)
+Método de solicitud:	CONSEGUIR
+URL de la solicitud:	http://127.0.0.1:8000/tienda/
+Utilizando la configuración de URL definida en djangologic.urls, Django probó estos patrones de URL, en este orden:
+
+admin/
+manager/ [name='home']
+manager/signup/ [name='signup']
+manager/logout/ [name='logout']
+manager/signin/ [name='signin']
+manager/products/ [name='products']
+manager/products_to_send/ [name='products_to_send']
+manager/product/create/ [name='create_product']
+manager/products/<int:products_id>/ [name='products_detail']
+manager/products/<int:products_id>/complete [name='complete_products']
+manager/products/<int:products_id>/delete [name='delete_products']
+[name='index']
+/tienda/ [name='tienda']
+^media/(?P<path>.*)$
+La ruta actual tienda/no coincidía con ninguna de estas.
+
+
+
+views.py
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.models import User
+from django.contrib.auth import login, logout, authenticate
+from django.db import IntegrityError
+from .forms import ProductForm
+from .serializers import ItemSerializer
+from .models import Producto
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+# Create your views here.
+# Create your views here.
+from rest_framework.decorators import api_view, permission_classes # New
+
+# ===============================================================================================================
+#===================================DJANGO ==================================================================
+# ===============================================================================================================
+
+def home(request):
+    """Renderiza la página de inicio.
+
+    Esta vista simplemente devuelve la plantilla 'home.html'.
+
+    Args:
+        request: El objeto HttpRequest entrante.
+
+    Returns:
+        Un objeto HttpResponse que renderiza 'home.html'.
+    """
+    return render(request, 'home.html')
+
+def signup(request):
+    """Gestiona el registro de nuevos usuarios.
+
+    Si es una solicitud GET, muestra el formulario de registro.
+    Si es una solicitud POST, intenta crear un nuevo usuario y, si tiene éxito,
+    inicia la sesión del usuario y lo redirige a la lista de tareas.
+    Maneja errores si las contraseñas no coinciden o si el nombre de usuario
+    ya existe.
+
+    Args:
+        request: El objeto HttpRequest entrante.
+
+    Returns:
+        Un objeto HttpResponse que:
+        - Renderiza 'signup.html' con el formulario (GET).
+        - Redirige a 'products' (POST exitoso).
+        - Renderiza 'signup.html' con el formulario y un mensaje de error (POST fallido).
+    """
+    if request.method == 'GET':
+        return render(request, 'signup.html', {
+        'form': UserCreationForm
+        })
+    else:
+        if request.POST['password1'] == request.POST['password2']:
+            try:
+                # register user
+                user = User.objects.create_user(username=request.POST['username'], password=request.POST['password1'])
+                user.save()
+                login(request, user)
+                return redirect('products')
+            
+            except IntegrityError:
+                return render(request, 'signup.html', {
+                    'form': UserCreationForm,
+                    'error': "User alredy exists"
+                })
+
+        return render(request, 'signup.html', {
+                    'form': UserCreationForm,
+                    'error': "Password do not match"
+                })
+
+@login_required
+def signout(request):
+    """Cierra la sesión del usuario actual y redirige a la página de inicio.
+
+    Args:
+        request: El objeto HttpRequest entrante.
+
+    Returns:
+        Un objeto HttpResponse que redirige a 'home'.
+    """
+    logout(request)
+    return redirect('home')
+
+
+def signin(request):
+    """Gestiona el inicio de sesión del usuario.
+
+    Si es una solicitud GET, muestra el formulario de autenticación.
+    Si es una solicitud POST, intenta autenticar al usuario. Si tiene éxito,
+    inicia la sesión del usuario y lo redirige a la lista de tareas. Si falla,
+    muestra un mensaje de error.
+
+    Args:
+        request: El objeto HttpRequest entrante.
+
+    Returns:
+        Un objeto HttpResponse que:
+        - Renderiza 'signin.html' con el formulario (GET).
+        - Redirige a 'products' (POST exitoso).
+        - Renderiza 'signin.html' con el formulario y un mensaje de error (POST fallido).
+    """
+
+    if request.method == 'GET':
+        return render(request, 'signin.html', {
+        'form': AuthenticationForm
+        })
+    else:
+        user = authenticate(
+            request, username=request.POST['username'], password=request.POST['password'])
+        if user is None:
+            return render(request, 'signin.html', {
+                'form': AuthenticationForm,
+                'error': 'User or password is incorrect'
+            })
+        else:
+            login(request, user)
+            return redirect('products')
+
+# =====================================================SECCION PRODUCTS===================================================================
+@login_required
+def products(request):
+    productos = Producto.objects.filter(user=request.user, datecompleted__isnull=True)
+    return render(request, 'products.html', {'productos': productos , 'sent_view': False})
+
+@login_required
+def products_to_send(request):
+    productos = Producto.objects.filter(user=request.user, datecompleted__isnull=False).order_by('-datecompleted')
+    return render(request, 'products.html', {'productos': productos, 'sent_view': True})
+
+@login_required
+def create_product(request):
+    if request.method == 'GET':
+        return render(request, 'create_product.html', {
+            'form': ProductForm
+        })
+    else:
+        try:
+            form = ProductForm(request.POST)
+            new_product = form.save(commit=False)
+            new_product.user = request.user
+            new_product.save()
+            return redirect('products')
+        
+        except ValueError:
+            return render(request, 'create_product.html', {
+                'form': ProductForm,
+                'error': 'Porfavor provide valida data'
+            })
+
+@login_required
+def product_detail(request, products_id:int):
+    if request.method == 'GET':
+        producto = get_object_or_404(Producto, pk=products_id, user=request.user)
+        form = ProductForm(instance=producto)
+        return render(request, 'products_detail.html', {'productos': producto, 'form': form})
+    else:
+        try:
+            producto = get_object_or_404(Producto, pk=products_id, user=request.user)
+            form = ProductForm(request.POST, instance=producto)
+            form.save()
+            return redirect('products')
+        except ValueError:
+            return render(request, 'products_detail.html', {'productos': producto, 'form': form, 'error': "Error updating product"})
+
+def sent_product(request, products_id:int):
+    # Productos enviados
+    # Se asegura de obtener el producto SOLO si pertenece al usuario logueado
+    producto = get_object_or_404(Producto, pk=products_id, user=request.user)
+    if request.method == 'POST':
+        # La condición se cumple: el producto existe y pertenece al usuario.
+        # Se marca como 'enviado' (datecompleted)
+        producto.datecompleted = timezone.now()
+        producto.save()
+        return redirect('products')
+
+
+def delete_product(request, products_id:int):
+    producto = get_object_or_404(Producto, pk=products_id, user=request.user)
+    if request.method == 'POST':
+        producto.delete()
+        return redirect('products')
+
+# ========================================================================================================================================
+
+
+# ===============================================================================================================
+#===================================Triven ==================================================================
+# ===============================================================================================================
+
+def index(request):
+    """Renderiza la página de inicio.
+
+    Esta vista simplemente devuelve la plantilla 'home.html'.
+
+    Args:
+        request: El objeto HttpRequest entrante.
+
+    Returns:
+        Un objeto HttpResponse que renderiza 'home.html'.
+    """
+    return render(request, 'triven/index.html')
+
+def products_store(request):
+    productos = Producto.objects.filter(user=request.user, datecompleted__isnull=False).order_by('-datecompleted')
+    return render(request, 'trivent/tienda.html', {'productos': productos, 'sent_view': True})
+
+
+urls.py
+
+"""
+URL configuration for djangologic project.
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/5.2/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.contrib import admin
+from django.urls import path, include
+from products import views
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+
+    #=================================VIEWS DE PRODUCTS Manager======================================================
+    path('manager/', views.home, name='home'),
+    path('manager/signup/', views.signup, name='signup'),
+    path('manager/logout/', views.signout, name='logout'),
+    path('manager/signin/', views.signin, name='signin'),
+    path('manager/products/', views.products, name='products'),
+    path('manager/products_to_send/', views.products_to_send, name='products_to_send'),
+    path('manager/product/create/', views.create_product, name='create_product'),
+    path('manager/products/<int:products_id>/', views.product_detail, name='products_detail'),
+    # urls.py
+    path('manager/products/<int:products_id>/complete', views.sent_product, name='complete_products'), # type: ignore
+    path('manager/products/<int:products_id>/delete', views.delete_product, name='delete_products'), # <-- Asegúrate de la coma # type: ignore
+
+
+    #=================================VIEWS DE Trivens======================================================
+    path('', views.index, name='index'),
+    path('/tienda/', views.products_store, name='tienda')
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+index.html
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Explora y compra todos los productos de Trivens Smart Shop.">
+    <meta name="description" content="Tu pagina de importacion de productos de confianza.">
     <link rel="shortcut icon" href="./img/TRV.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://kit.fontawesome.com/daf8c554e7.js" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="./css/styles.css"> 
-    <title>Tienda - Trivens Smart Shop</title>
+    <title>Triven Smart Shop</title>
 </head>
 <body>
     <div class="container-fluid p-0">
-        
+
         <!-- ================================================================MENU DE NAVEGACION==================================================================== -->
         <header>
             <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm sticky-top">
                 <div class="container">
                     <a class="navbar-brand fw-bold text-primary" href="#">
-                        Trivens Smart Shop
+                        <img src="/products/static/IMG/Logo Triven.svg" alt="" width="50">
                     </a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
@@ -30,12 +316,12 @@ tienda.html
                     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                         <ul class="navbar-nav">
                             <li class="nav-item">
-                                <a class="nav-link" href="./index.html">
+                                <a class="nav-link active" aria-current="page" href="#">
                                     <i class="fa-solid fa-house me-1"></i>Inicio
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link active" aria-current="page" href="/products/templates/trivens/tienda.html">
+                                <a class="nav-link" href="/tienda/">
                                     <i class="fa-solid fa-shop me-1"></i>Tienda
                                 </a>
                             </li>
@@ -57,221 +343,158 @@ tienda.html
         </header>
         <!-- ====================================================================================================================================================== -->
 
-        <main class="py-5 bg-light">
-            <div class="container">
-                <h1 class="mb-5 fw-bold text-center text-secondary">Explora Todos Nuestros Productos</h1>
 
-                <div class="row">
-                    <div class="col-lg-3 mb-4">
-                        <div class="card shadow-lg sticky-top" style="top: 80px;">
-                            
-                            <div class="card-header bg-primary text-white fw-bold">
-                                <i class="fa-solid fa-filter me-2"></i>Filtros de Búsqueda
-                            </div>
-                            <div class="card-body">
-                                
-                                <!-- ===========================================================CATEGORIAS=========================================================== -->
-                                <div class="mb-4 pb-2 border-bottom">
-                                    <h5 class="fw-bold text-dark mb-3">Categorías</h5>
-                                    <ul class="list-unstyled small">
-                                        <li><a href="#" class="text-decoration-none text-muted d-block py-1">Salud y Belleza</a></li>
-                                        <li><a href="#" class="text-decoration-none text-muted d-block py-1">Higiene</a></li>
-                                        <li><a href="#" class="text-decoration-none text-muted d-block py-1">Comestibles</a></li>
-                                    </ul>
-                                </div>
+        <main>
+            
+            <!-- ================================================================SECCION HERO==================================================================== -->
+            <section class="p-5 text-center bg-dark text-white main-section" style="background-image: url('URL_DE_TU_IMAGEN_DE_FONDO'); background-size: cover; background-position: center; min-height: 400px; display: flex; align-items: center; justify-content: center;">
+                <div class="title bg-dark bg-opacity-75 p-4 rounded">
+                    <h1 class="display-3 fw-bold text-warning">Trivens Smart Shop</h1>
+                    <p class="lead mb-4">Precios confiables y productos de calidad.</p>
+                    <a href="/tienda/" class="btn btn-primary btn-lg boton_store">Ver Tienda</a>
+                </div>
+            </section>
+            <!-- ==================================================================================================================================================== -->
 
-                                <!-- =========================================================RANGO PRECIO=========================================================== -->
-                                <div class="mb-4 pb-2 border-bottom">
-                                    <h5 class="fw-bold text-dark mb-3">Rango de Precio</h5>
-                                    <form>
-                                        <label for="priceRange" class="form-label small text-muted">Ajustar rango</label>
-                                        <input type="range" class="form-range" min="1" max="1500" id="priceRange" value="500">
-                                        <div class="d-flex justify-content-between">
-                                            <small class="text-muted fw-bold">$1</small>
-                                            <small class="text-muted fw-bold">$1500+</small>
-                                        </div>
-                                        <button type="submit" class="btn btn-sm btn-outline-primary w-100 mt-3">Aplicar Filtro</button>
-                                    </form>
-                                </div>
 
-                                <div class="mb-0">
-                                    <h5 class="fw-bold text-dark mb-3">Valoración Mínima</h5>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="ratingFilter" id="rating5" checked>
-                                        <label class="form-check-label" for="rating5">
-                                            <i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i>
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="ratingFilter" id="rating4">
-                                        <label class="form-check-label" for="rating4">
-                                            <i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i> & Arriba
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="ratingFilter" id="rating3">
-                                        <label class="form-check-label" for="rating3">
-                                            <i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i> & Arriba
-                                        </label>
-                                    </div>
+            <!-- ================================================================SECCION NOSOTROS==================================================================== -->
+            <section class="container py-5 section-info">
+                <h2 class="text-center mb-5 fw-bold title-info">¿Por qué nosotros?</h2>
+                <div class="row text-center">
+                    <div class="col-md-3 mb-4">
+                        <div class="p-4 border rounded shadow-sm h-100 d-flex flex-column align-items-center logues">
+                            <i class="fa-solid fa-bolt fa-3x text-primary mb-3"></i>
+                            <p class="fw-bold">Compra Rápida</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="p-4 border rounded shadow-sm h-100 d-flex flex-column align-items-center logues">
+                            <i class="fa-solid fa-shield fa-3x text-success mb-3"></i>
+                            <p class="fw-bold">Pago Seguro</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="p-4 border rounded shadow-sm h-100 d-flex flex-column align-items-center logues">
+                            <i class="fa-solid fa-truck-fast fa-3x text-warning mb-3"></i>
+                            <p class="fw-bold">Envío Gratis</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="p-4 border rounded shadow-sm h-100 d-flex flex-column align-items-center logues">
+                            <i class="fa-solid fa-credit-card fa-3x text-danger mb-3"></i>
+                            <p class="fw-bold">Múltiples Métodos</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- =================================================================================================================================================== -->
+
+            <!-- =======================================================SECCION PRODUCTOS DESTACADOS==================================================================== -->
+            <section class="container py-5 bg-light products-section">
+                <div class="products-title text-center mb-5">
+                    <h2 class="fw-bold">Productos Destacados</h2>
+                </div>
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 articles-products">
+                    
+                    <div class="col">
+                        <div class="card h-100 shadow-lg products">
+                            <img src="/media/productos/Gohan.jpg" class="card-img-top products-img" alt="Goku SSj Funko" style="height: 250px; object-fit: cover;">
+                            <div class="card-body d-flex flex-column products-info">
+                                <h5 class="card-title product-title">Gohan SSj</h5>
+                                <p class="card-text product-description flex-grow-1">Es un producto que compraras si eres un verdadero fan de Dragon Ball.</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <span class="fs-4 fw-bold text-success price">10$</span>
+                                    <button class="btn btn-primary btn-sm">Añadir</button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-lg-9">
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border border-info">
-                            <p class="mb-0 text-muted small">Mostrando **1-12 de 150** productos disponibles</p>
-                            <div class="d-flex align-items-center">
-                                <label for="sort-by" class="form-label me-2 mb-0 d-none d-md-block small fw-bold">Ordenar por:</label>
-                                <select class="form-select form-select-sm" id="sort-by" style="width: auto;">
-                                    <option selected>Más Relevante</option>
-                                    <option value="1">Precio: Menor a Mayor</option>
-                                    <option value="2">Precio: Mayor a Menor</option>
-                                    <option value="3">Novedades</option>
-                                    <option value="4">Mejor Valorados</option>
-                                </select>
+                    <div class="col">
+                        <div class="card h-100 shadow-lg products">
+                            <img src="/media/productos/Toddy.jpg" class="card-img-top products-img" alt="iPhone 14 Pro Max" style="height: 250px; object-fit: cover;">
+                            <div class="card-body d-flex flex-column products-info">
+                                <h5 class="card-title product-title">Toddy</h5>
+                                <p class="card-text product-description flex-grow-1">Es un producto para aquellos que buscan lo último en tecnología.</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <span class="fs-4 fw-bold text-success price">10$</span>
+                                    <button class="btn btn-primary btn-sm">Añadir</button>
+                                </div>
                             </div>
                         </div>
-
-                        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-3 g-4 articles-products">
-                            
-                            <div class="col">
-                                <div class="card h-100 shadow-lg products">
-                                    <img src="/media/productos/Gohan.jpg" class="card-img-top products-img" alt="Gohan SSj Funko" style="height: 250px; object-fit: cover;">
-                                    <div class="card-body d-flex flex-column products-info">
-                                        <h5 class="card-title product-title">Gohan SSj (Edición Limitada)</h5>
-                                        <div class="mb-2">
-                                            <i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-regular fa-star text-warning"></i>
-                                            <small class="text-muted">(120)</small>
-                                        </div>
-                                        <p class="card-text product-description flex-grow-1">Figura de colección de Gohan en Super Saiyan, un must-have para fans de Dragon Ball.</p>
-                                        <div class="d-flex justify-content-between align-items-center mt-3">
-                                            <span class="fs-4 fw-bold text-danger price">$59.99</span>
-                                            <button class="btn btn-primary btn-sm"><i class="fa-solid fa-cart-plus me-1"></i>Añadir</button>
-                                        </div>
-                                    </div>
+                    </div>
+                    
+                    <div class="col">
+                        <div class="card h-100 shadow-lg products">
+                            <img src="/media/productos/Luke.jpg" class="card-img-top products-img" alt="Macbook" style="height: 250px; object-fit: cover;">
+                            <div class="card-body d-flex flex-column products-info">
+                                <h5 class="card-title product-title">Luke juguete</h5>
+                                <p class="card-text product-description flex-grow-1">La herramienta ideal para profesionales y creativos.</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <span class="fs-4 fw-bold text-success price">10$</span>
+                                    <button class="btn btn-primary btn-sm">Añadir</button>
                                 </div>
                             </div>
-
-                            <div class="col">
-                                <div class="card h-100 shadow-lg products">
-                                    <img src="/media/productos/Toddy.jpg" class="card-img-top products-img" alt="Toddy" style="height: 250px; object-fit: cover;">
-                                    <div class="card-body d-flex flex-column products-info">
-                                        <h5 class="card-title product-title">Toddy (Paquete de 3)</h5>
-                                        <div class="mb-2">
-                                            <i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star-half-stroke text-warning"></i>
-                                            <small class="text-muted">(450)</small>
-                                        </div>
-                                        <p class="card-text product-description flex-grow-1">El chocolate en polvo favorito de la casa, ideal para el desayuno y postres.</p>
-                                        <div class="d-flex justify-content-between align-items-center mt-3">
-                                            <span class="fs-4 fw-bold text-success price">$12.50</span>
-                                            <button class="btn btn-primary btn-sm"><i class="fa-solid fa-cart-plus me-1"></i>Añadir</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col">
-                                <div class="card h-100 shadow-lg products">
-                                    <img src="/media/productos/Luke.jpg" class="card-img-top products-img" alt="Luke Skywalker Figure" style="height: 250px; object-fit: cover;">
-                                    <div class="card-body d-flex flex-column products-info">
-                                        <h5 class="card-title product-title">Figura de Luke Skywalker</h5>
-                                        <div class="mb-2">
-                                            <i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star-half-stroke text-warning"></i><i class="fa-regular fa-star text-warning"></i>
-                                            <small class="text-muted">(88)</small>
-                                        </div>
-                                        <p class="card-text product-description flex-grow-1">Juguete articulado de Star Wars, para jóvenes y coleccionistas. ¡Que la fuerza te acompañe!</p>
-                                        <div class="d-flex justify-content-between align-items-center mt-3">
-                                            <span class="fs-4 fw-bold text-success price">$29.99</span>
-                                            <button class="btn btn-primary btn-sm"><i class="fa-solid fa-cart-plus me-1"></i>Añadir</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col">
-                                <div class="card h-100 shadow-lg products">
-                                    <img src="/media/productos/iPhone17.jpg" class="card-img-top products-img" alt="iPhone 17 Pro Max" style="height: 250px; object-fit: cover;">
-                                    <div class="card-body d-flex flex-column products-info">
-                                        <h5 class="card-title product-title">iPhone 17 Pro Max (256GB)</h5>
-                                        <div class="mb-2">
-                                            <i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i>
-                                            <small class="text-muted">(999)</small>
-                                        </div>
-                                        <p class="card-text product-description flex-grow-1">Lo último en tecnología móvil con rendimiento y cámara inigualables.</p>
-                                        <div class="d-flex justify-content-between align-items-center mt-3">
-                                            <span class="fs-4 fw-bold text-danger price">$1,499.00</span>
-                                            <button class="btn btn-primary btn-sm"><i class="fa-solid fa-cart-plus me-1"></i>Añadir</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col">
-                                <div class="card h-100 shadow-lg products">
-                                    <img src="https://via.placeholder.com/400x250?text=Auriculares+Inalámbricos" class="card-img-top products-img" alt="Auriculares" style="height: 250px; object-fit: cover;">
-                                    <div class="card-body d-flex flex-column products-info">
-                                        <h5 class="card-title product-title">Auriculares Inalámbricos Pro</h5>
-                                        <div class="mb-2">
-                                            <i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star-half-stroke text-warning"></i><i class="fa-regular fa-star text-warning"></i>
-                                            <small class="text-muted">(210)</small>
-                                        </div>
-                                        <p class="card-text product-description flex-grow-1">Sonido de alta fidelidad, cancelación de ruido activa y batería de larga duración.</p>
-                                        <div class="d-flex justify-content-between align-items-center mt-3">
-                                            <span class="fs-4 fw-bold text-success price">$89.99</span>
-                                            <button class="btn btn-primary btn-sm"><i class="fa-solid fa-cart-plus me-1"></i>Añadir</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="col">
-                                <div class="card h-100 shadow-lg products">
-                                    <img src="https://via.placeholder.com/400x250?text=Crema+Facial" class="card-img-top products-img" alt="Crema Facial" style="height: 250px; object-fit: cover;">
-                                    <div class="card-body d-flex flex-column products-info">
-                                        <h5 class="card-title product-title">Crema Facial Hidratante</h5>
-                                        <div class="mb-2">
-                                            <i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-regular fa-star text-warning"></i>
-                                            <small class="text-muted">(55)</small>
-                                        </div>
-                                        <p class="card-text product-description flex-grow-1">Fórmula con ácido hialurónico y vitaminas para una piel radiante y suave. Categoría: Salud y Belleza.</p>
-                                        <div class="d-flex justify-content-between align-items-center mt-3">
-                                            <span class="fs-4 fw-bold text-success price">$19.95</span>
-                                            <button class="btn btn-primary btn-sm"><i class="fa-solid fa-cart-plus me-1"></i>Añadir</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            </div>
-                        
-                        <div class="d-flex justify-content-center mt-5">
-                            <nav aria-label="Navegación de Productos">
-                                <ul class="pagination shadow-sm">
-                                    <li class="page-item disabled">
-                                        <a class="page-link" href="#" aria-label="Anterior">
-                                            <span aria-hidden="true">&laquo;</span> Anterior
-                                        </a>
-                                    </li>
-                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#" aria-label="Siguiente">
-                                            Siguiente <span aria-hidden="true">&raquo;</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
                         </div>
-                        
                     </div>
+
+                    <div class="col d-none d-lg-block"> <div class="card h-100 shadow-lg products">
+                            <img src="/media/productos/iPhone17.jpg" class="card-img-top products-img" alt="Producto de Ejemplo" style="height: 250px; object-fit: cover;">
+                            <div class="card-body d-flex flex-column products-info">
+                                <h5 class="card-title product-title">iPhone 17 Pro Max</h5>
+                                <p class="card-text product-description flex-grow-1">El reloj inteligente que cambiará tu día a día.</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <span class="fs-4 fw-bold text-success price">10$</span>
+                                    <button class="btn btn-primary btn-sm">Añadir</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-            </div>
+                </div>
+            </section>
+            <!-- =================================================================================================================================================== -->
+
+
+            <!-- =======================================================SECCION CATEGORIAS========================================================================== -->
+            <section class="container py-5 section-category">
+                <div class="products-title text-center mb-5">
+                    <h2 class="fw-bold">Explora Nuestras Categorías</h2>
+                </div>
+                <div class="row row-cols-1 row-cols-md-3 g-4">
+                    
+                    <div class="col">
+                        <div class="card text-center bg-info text-white shadow-lg category" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                            <div class="card-body category-title">
+                                <h3 class="card-title fw-bold">Salud y Belleza</h3>
+                                <button class="btn btn-light mt-3">Ver más</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="card text-center bg-warning text-dark shadow-lg category" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                            <div class="card-body category-title">
+                                <h3 class="card-title fw-bold">Higiene</h3>
+                                <button class="btn btn-dark mt-3">Ver más</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="card text-center bg-danger text-white shadow-lg category" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                            <div class="card-body category-title">
+                                <h3 class="card-title fw-bold">Comestibles</h3>
+                                <button class="btn btn-light mt-3">Ver más</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
+        <!-- =================================================================================================================================================== -->
+        
 
+        <!-- =======================================================FOOTER DE CONTACTOS========================================================================== -->
         <footer class="bg-dark text-white pt-4 pb-2">
             <div class="container text-center">
                 <div class="social-media mb-3">
@@ -286,8 +509,8 @@ tienda.html
                 <p class="text-muted"><small>&copy; 2025 Trivens Smart Shop. Todos los derechos reservados.</small></p>
             </div>
         </footer>
-        
     </div>
+    <!-- =================================================================================================================================================== -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="./js/script.js"></script>

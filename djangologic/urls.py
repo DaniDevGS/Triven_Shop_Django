@@ -23,20 +23,23 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    #=================================VIEWS DE PRODUCTS======================================================
-    path('', views.home, name='home'),
-    path('signup/', views.signup, name='signup'),
-    path('logout/', views.signout, name='logout'),
-    path('signin/', views.signin, name='signin'),
-    path('products/', views.products, name='products'),
-    path('products_to_send/', views.products_to_send, name='products_to_send'),
-    path('product/create/', views.create_product, name='create_product'),
-    path('products/<int:products_id>/', views.product_detail, name='products_detail'),
-    path('api/', include('products.urls')),
+    #=================================VIEWS DE PRODUCTS Manager======================================================
+    path('manager/', views.home, name='home'),
+    path('manager/signup/', views.signup, name='signup'),
+    path('manager/logout/', views.signout, name='logout'),
+    path('manager/signin/', views.signin, name='signin'),
+    path('manager/products/', views.products, name='products'),
+    path('manager/products_to_send/', views.products_to_send, name='products_to_send'),
+    path('manager/product/create/', views.create_product, name='create_product'),
+    path('manager/products/<int:products_id>/', views.product_detail, name='products_detail'),
     # urls.py
-    path('products/<int:products_id>/complete', views.sent_product, name='complete_products'), # type: ignore
-    path('products/<int:products_id>/delete', views.delete_product, name='delete_products'), # <-- Asegúrate de la coma # type: ignore
+    path('manager/products/<int:products_id>/complete', views.sent_product, name='complete_products'), # type: ignore
+    path('manager/products/<int:products_id>/delete', views.delete_product, name='delete_products'), # <-- Asegúrate de la coma # type: ignore
 
+
+    #=================================VIEWS DE Trivens======================================================
+    path('', views.index, name='index'),
+    path('tienda/', views.products_store, name='tienda')
 ]
 
 if settings.DEBUG:

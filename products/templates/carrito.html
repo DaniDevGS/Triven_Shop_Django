@@ -4,44 +4,65 @@
 {% block content %}
         <main class="container py-5">
             <h1 class="mb-4 fw-bold">🛒 Carrito de Compras</h1>
+
+            {% if items %}
             <div class="row">
                 <div class="col-lg-8">
-                    
+                    {% for item in items %}
+                    <!-- ==============PRODUCTO================== -->
                     <div class="card mb-3 shadow-sm cart-item">
                         <div class="row g-0">
                             <div class="col-md-3 p-3 d-flex align-items-center justify-content-center">
-                                <img src="/media/productos/Gohan.jpg" class="img-fluid rounded-start" alt="Gohan SSj Funko" style="max-height: 150px; object-fit: contain;">
+                                <img src="{{ item.imagen_url }}" class="img-fluid rounded-start" alt="{{ item.title }}" style="max-height: 150px; object-fit: contain;">
                             </div>
                             <div class="col-md-9">
                                 <div class="card-body">
-                                    <h5 class="card-title fw-bold">Gohan SSj - Figura Coleccionable</h5>
-                                    <p class="card-text text-muted mb-1"><small>Vendido por: Trivens Smart Shop</small></p>
-                                    <p class="card-text mb-2 text-success fw-bold">En stock</p>
+                                    <h5 class="card-title fw-bold">{{ item.title }}</h5>
                                     
                                     <div class="d-flex align-items-center mb-3">
-                                        <label for="qty-gohan" class="form-label me-3 mb-0 fw-semibold">Cantidad:</label>
-                                        <select class="form-select form-select-sm w-auto" id="qty-gohan">
-                                            <option value="1" selected>1</option>
-                                            <option value="2">2</option>
-                                            <option value="3">3</option>
-                                        </select>
+                                        <form action="{% url 'update_cart_quantity' item.producto_id %}" method="POST">
+                                        {% csrf_token %}
+                                        <label for="qty-{{ item.producto_id }}" class="form-label me-3 mb-0 fw-semibold">Cantidad:</label>
+                                        <input type="number"
+                                            name="cantidad"
+                                            id="qty-{{ item.producto_id }}"
+                                            class="form-control form-control-sm me-3"
+                                            value="{{ item.cantidad }}"
+                                            min="1"
+                                            style="width: 70px;"
+                                            onchange="this.form.submit()">
+                                        </form>
+
+                                        <span class="fs-5 fw-bold text-success price">${{ item.total_item_usd|floatformat:2 }} USD</span>
+
+                                        {% if item.total_item_ves %}
+                                            <span class="fs-5 fw-bold text-warning price">Bs. {{ item.total_item_ves|floatformat:2 }} VES</span>
+                                        {% endif %}
                                     </div>
 
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="fs-5 fw-bold text-danger price">10.00 $</span>
-                                        <button class="btn btn-outline-danger btn-sm remove-item">
-                                            <i class="fa-solid fa-trash-can me-1"></i> Eliminar
-                                        </button>
+                                        <span class="text-muted small">Precio Unitario: ${{ item.price_usd|floatformat:2 }} USD</span>
+                                    
+                                        <form method="POST" action="{% url 'remove_from_cart' item.producto_id %}" class="m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm remove-item">
+                                                <i class="fa-solid fa-trash-can me-1"></i> Eliminar
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    {% endfor %}
+                    <!-- ================================================== -->
                     <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
-                        <button class="btn btn-outline-secondary">Continuar Comprando</button>
-                        <button class="btn btn-outline-warning">Vaciar Carrito</button>
+                        <a href="{% url 'tienda' %}"><button class="btn btn-outline-secondary">Continuar Comprando</button></a>
+                        <form method="POST" action="{% url 'clear_cart' %}" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-warning">Vaciar Carrito</button>
+                    </form>
                     </div>
-
                 </div>
                 
                 <div class="col-lg-4 mt-4 mt-lg-0">
@@ -52,16 +73,27 @@
                         <div class="card-body">
                             <ul class="list-group list-group-flush mb-3">
                                 <li class="list-group-item d-flex justify-content-between">
-                                    <span>Subtotal (3 artículos):</span>
-                                    <span class="fw-semibold">$ 30.00</span>
+                                    {% with items|length as item_count %}
+                                    <span>Subtotal ({{ item_count }} artículo{{ item_count|pluralize }}) en USD:</span>
+                                    {% endwith %}
+                                    <span class="fw-semibold">${{ subtotal_usd|floatformat:2 }}</span>
                                 </li>
+
+                                {% if subtotal_ves %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Subtotal en Bolívares (Tasa: {{ bolivar_rate|floatformat:2 }} Bs./$):</span>
+                                    <span class="fw-semibold">Bs. {{ subtotal_ves|floatformat:2 }}</span>
+                                </li>
+                                {% endif %}
+
                                 <li class="list-group-item d-flex justify-content-between">
                                     <span>Costo de Envío:</span>
                                     <span class="text-success fw-semibold">Gratis</span>
                                 </li>
+
                                 <li class="list-group-item d-flex justify-content-between">
-                                    <span class="fs-5 fw-bold">Total estimado:</span>
-                                    <span class="fs-5 fw-bold text-primary">$ 30.00</span>
+                                    <span class="fs-5 fw-bold">Total a Pagar (USD):</span>
+                                    <span class="fs-5 fw-bold text-primary">${{ subtotal_usd|floatformat:2 }}</span>
                                 </li>
                             </ul>
                             
@@ -75,6 +107,29 @@
                     </div>
                 </div>
             </div>
+
+            {% else %}
+            <!-- ============================================================================ELSE================================================================ -->
+            <div class="row justify-content-center my-5">
+        <div class="col-12 col-md-8 col-lg-6 text-center py-5 px-4 bg-white border border-2 rounded-3xl shadow-lg" style="border-style: dashed; border-color: #ced4da;">
+            <!-- Icono grande y llamativo -->
+            <i class="fa-solid fa-bag-shopping fa-6x text-muted mb-4" style="opacity: 0.7;"></i>
+            
+            <h2 class="fw-bolder mb-3 text-dark">¡Tu Carrito Está Vacío!</h2>
+            
+            <p class="lead mb-4 text-secondary">
+                Parece que aún no has agregado productos. Explora nuestras fantásticas ofertas y encuentra algo increíble para llenar este espacio.
+            </p>
+            
+            <!-- Botón de Llamada a la Acción (Asumo que /products/ es la URL de tu tienda) -->
+            <a href="{% url 'tienda' %}" class="btn btn-primary btn-lg fw-bold shadow-sm">
+                <i class="fa-solid fa-shop me-1"></i> Empezar a Comprar
+            </a>
+        </div>
+    </div>
+
+
+            {% endif %}
 
             <hr class="my-5">
 

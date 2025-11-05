@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 
 CATEGORIA_CHOICES = (
@@ -28,3 +30,46 @@ class Producto(models.Model):
     def __str__(self):
         return self.title + '- by ' + self.user.username
 
+# ================================ NUEVOS MODELOS PARA EL CARRITO ================================
+
+class Carrito(models.Model):
+    # El carrito se asocia a un usuario. Si es anónimo, podrías usar la sesión de Django.
+    # Para este ejemplo, asumiremos un usuario autenticado por simplicidad con un carrito persistente.
+    # Si quieres un carrito de sesión, la lógica es diferente (usar la sesión de Django).
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Carrito de {self.user.username}"
+
+
+class ItemCarrito(models.Model):
+    carrito = models.ForeignKey(Carrito, on_delete=models.CASCADE, related_name='items')
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    cantidad = models.PositiveIntegerField(default=1)
+    # Almacenar el precio al momento de añadir para evitar problemas si el precio del producto cambia
+    precio_unidad = models.DecimalField(max_digits=6, decimal_places=2) 
+    fecha_añadido = models.DateTimeField(auto_now_add=True)
+
+    def total_item(self):
+        return self.precio_unidad * self.cantidad
+
+    def __str__(self):
+        return f"{self.cantidad} x {self.producto.title} en el carrito de {self.carrito.user.username}"
+
+# Señal para asegurar que se cree un carrito para cada nuevo usuario
+@receiver(pre_save, sender=User)
+def create_user_carrito(sender, instance, **kwargs):
+    if instance._state.adding: # Solo si el usuario es nuevo
+        # Carrito.objects.get_or_create(user=instance) # Mejor hacerlo en el post_save para asegurar que el User exista
+        pass
+
+# Usaremos post_save para asegurar que el usuario ya existe en la base de datos
+from django.db.models.signals import post_save
+
+@receiver(post_save, sender=User)
+def create_user_carrito_post_save(sender, instance, created, **kwargs):
+    if created:
+        Carrito.objects.get_or_create(user=instance)
+
+# =================================================================================================

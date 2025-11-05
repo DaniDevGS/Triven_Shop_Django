@@ -5,7 +5,8 @@ from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 from .forms import ProductForm
 from .serializers import ItemSerializer
-from .models import Producto, CATEGORIA_CHOICES
+from .models import Producto, CATEGORIA_CHOICES, Carrito, ItemCarrito # <--- IMPORTANTE: Importar Carrito e ItemCarrito
+from django.contrib import messages
 from.conversion import get_exchange_rate
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
@@ -180,10 +181,150 @@ def products_store(request):
         'min_price': min_price,           # Nuevo: Usado para rellenar el input de precio mínimo
         'max_price': max_price            # Nuevo: Usado para rellenar el input de precio máximo
     })
+# ===============================================================================================================
+# =================================== Lógica del Carrito =======================================================
+# ===============================================================================================================
+
+@login_required
+def add_to_cart(request):
+    """Agrega un producto al carrito (sesión). Soporta adición de cantidad."""
+    if request.method == 'POST':
+        producto_id = request.POST.get('producto_id')
+        try:
+            cantidad = int(request.POST.get('cantidad', 1)) # Obtener cantidad, por defecto 1
+            if cantidad < 1:
+                cantidad = 1
+        except ValueError:
+            cantidad = 1
+
+        producto = get_object_or_404(Producto, pk=producto_id, datecompleted__isnull=False)
+        
+        # Inicializa el carrito si no existe en la sesión
+        cart = request.session.get('cart', {})
+        
+        # Usa el ID del producto como clave.
+        if producto_id in cart:
+            # Si ya existe, actualiza la cantidad (sumando la nueva cantidad)
+            # Esto puede ser una simple suma o reemplazar, dependiendo de si el formulario permite elegir una nueva.
+            # Aquí, lo sumamos para la tienda, o lo establecemos si viene de un lugar que define la cantidad total.
+            
+            # NOTA: Para la tienda, la mejor práctica es AÑADIR. 
+            # Para la página de detalle/carrito, se puede REEMPLAZAR.
+            # Para simplicidad, aquí lo SUMAMOS:
+            cart[producto_id]['cantidad'] += cantidad
+        else:
+            # Si no existe, lo agrega.
+            cart[producto_id] = {
+                'id': producto.id, # type: ignore
+                'title': producto.title,
+                'price': float(producto.price), # Guardar como float o str para serialización en sesión
+                'imagen_url': producto.imagen.url,
+                'cantidad': cantidad
+            }
+
+        request.session['cart'] = cart
+        request.session.modified = True
+        return redirect('carrito') # Redirige al carrito después de agregar
+    return redirect('tienda')
+
+@login_required
+def remove_from_cart(request, producto_id):
+    """Elimina un producto por completo del carrito (sesión)."""
+    cart = request.session.get('cart', {})
+    
+    # Convierte el ID a string, ya que las claves de sesión son strings
+    producto_id_str = str(producto_id)
+    
+    if producto_id_str in cart:
+        del cart[producto_id_str]
+        request.session['cart'] = cart
+        request.session.modified = True
+
+    return redirect('carrito')
+
+@login_required
+def update_cart_quantity(request, producto_id):
+    """Actualiza la cantidad de un producto específico en el carrito."""
+    if request.method == 'POST':
+        producto_id_str = str(producto_id)
+        try:
+            # Asegúrate de que la cantidad es válida
+            new_quantity = int(request.POST.get('cantidad'))
+            if new_quantity < 1:
+                new_quantity = 1
+        except (TypeError, ValueError):
+            return redirect('carrito') # O muestra un error
+
+        cart = request.session.get('cart', {})
+        
+        if producto_id_str in cart:
+            cart[producto_id_str]['cantidad'] = new_quantity
+            request.session['cart'] = cart
+            request.session.modified = True
+
+    return redirect('carrito')
+
+@login_required
+def clear_cart(request):
+    """Elimina todos los items del carrito."""
+    if request.method == 'POST':
+        if 'cart' in request.session:
+            del request.session['cart']
+            request.session.modified = True
+    return redirect('carrito')
+
 
 def carrito(request):
-    return render(request, 'carrito.html')
+    """Muestra el contenido del carrito, incluyendo la conversión a Bolívares."""
+    cart = request.session.get('cart', {})
+    items = []
+    subtotal_usd = Decimal(0.00)
+    
+    # Obtener la tasa de cambio
+    bolivar_rate_float = get_exchange_rate()
+    if bolivar_rate_float is not None:
+        bolivar_rate = Decimal(str(bolivar_rate_float))
+    else:
+        bolivar_rate = None # O usar un valor por defecto si la API falla (ej: Decimal(0.00))
 
+    # Recalcular el subtotal y preparar los datos para la plantilla
+    for producto_id_str, data in cart.items():
+        cantidad = data.get('cantidad', 1)
+        price_usd = Decimal(str(data.get('price', 0.00)))
+        total_item_usd = price_usd * cantidad
+        subtotal_usd += total_item_usd
+        
+        # Lógica de conversión a Bolívares
+        price_ves = None
+        total_item_ves = None
+
+        if bolivar_rate:
+            price_ves = price_usd * bolivar_rate
+            total_item_ves = total_item_usd * bolivar_rate
+
+        items.append({
+            'producto_id': int(producto_id_str),
+            'title': data.get('title'),
+            'price_usd': price_usd,
+            'price_ves': price_ves,
+            'cantidad': cantidad,
+            'imagen_url': data.get('imagen_url'),
+            'total_item_usd': total_item_usd,
+            'total_item_ves': total_item_ves,
+        })
+
+    # Calcular subtotal total en Bolívares
+    subtotal_ves = subtotal_usd * bolivar_rate if bolivar_rate else None
+    
+    context = {
+        'items': items,
+        'subtotal_usd': subtotal_usd,
+        'subtotal_ves': subtotal_ves,
+        'bolivar_rate': bolivar_rate,
+    }
+    return render(request, 'carrito.html', context)
+
+#=================================================================================================================================
 
 @login_required
 def user_details(request):

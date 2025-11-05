@@ -38,14 +38,21 @@
                             </li>
                             {% if user.is_authenticated %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'signin' %}">
-                                    <i class="fa-solid fa-user" style="color: #63E6BE;"></i>{{ producto.user.username }}
+                                <a class="nav-link" href="{% url 'user_detail' %}">
+                                    <i class="fa-solid fa-user" style="color: #f90000;"></i><span>{{ request.user.username }}</span>
                                 </a>
                             </li>
                             {% else %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'signin' %}">
                                     <i class="fa-solid fa-user"></i>Usuario
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% if request.user.username == "Dani" %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'manage' %}">
+                                    <i class="fa-solid fa-jedi"></i><span>Manage</span>
                                 </a>
                             </li>
                             {% endif %}

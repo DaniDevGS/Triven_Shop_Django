@@ -1,7 +1,7 @@
-Actua como desarrollador Full Stack y ayudame para agregar en signin, signup, signout el gmail para la autenticacion de usuario osea ademas del username, la password. Quiero estos tres datos el username, la password y el gmail Estos son todos los archivos que necesitas?
+Actua como desarrollador Full Stack, ayudame a que cuando el usuario haga click en un producto de la tienda este sea redirigido a la pagina con el id de ese producto, guiate de la funcion de products y products_detail, esta funcion es para products_items, replica lo mismo que en el products del manager. Solamente agrega la opcion de entrar al producto de tienda. Si necesitas mas contexto avisa
 
-products/templates/views.py
 
+products/views.py
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -10,7 +10,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 from .forms import ProductForm
 from .serializers import ItemSerializer
-from .models import Producto
+from .models import Producto, CATEGORIA_CHOICES
 from.conversion import get_exchange_rate
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
@@ -124,30 +124,88 @@ def index(request):
 
 
 def products_store(request):
-    productos = Producto.objects.filter(datecompleted__isnull=False).order_by('-datecompleted')
+    # 1. Obtener parámetros de filtro de la URL (GET request)
+    category_code = request.GET.get('category')
+    min_price_str = request.GET.get('min_price') # Nuevo: Precio Mínimo
+    max_price_str = request.GET.get('max_price') # Nuevo: Precio Máximo
+    
+    # 2. Inicializar el queryset base
+    productos_queryset = Producto.objects.filter(datecompleted__isnull=False)
+
+    # 3. Aplicar filtro de CATEGORÍA
+    # Nota: Usaremos 'categoria' en el filtro de Django para coincidir con el error que tenías,
+    # que indica que ese es el nombre del campo en tu modelo/DB.
+    if category_code:
+        productos_queryset = productos_queryset.filter(category=category_code)
+
+    # 4. Aplicar filtro de PRECIO
+    
+    # Conversión segura del precio mínimo
+    if min_price_str and min_price_str.isdigit():
+        min_price = Decimal(min_price_str)
+        # Filtra productos donde el 'price' sea mayor o igual al mínimo
+        productos_queryset = productos_queryset.filter(price__gte=min_price)
+    else:
+        min_price = None
+
+    # Conversión segura del precio máximo
+    if max_price_str and max_price_str.isdigit():
+        max_price = Decimal(max_price_str)
+        # Filtra productos donde el 'price' sea menor o igual al máximo
+        productos_queryset = productos_queryset.filter(price__lte=max_price)
+    else:
+        max_price = None
+        
+    # 5. Ordenar el queryset final y obtener la cantidad
+    productos = productos_queryset.order_by('-datecompleted')
     numero_productos = productos.count()
 
+    # ... (código de tasa de bolívar - lo mantienes igual) ...
     bolivar_rate = get_exchange_rate()
 
     if bolivar_rate is not None:
-        bolivar_rate = Decimal(str(bolivar_rate)) # Usamos str() para evitar imprecisiones del float
+        bolivar_rate = Decimal(str(bolivar_rate)) 
 
     for producto in productos:
         if bolivar_rate is not None:
-            # Ahora la operación es Decimal * Decimal
             conversion = producto.price * bolivar_rate
             producto.price_ves = conversion # pyright: ignore[reportAttributeAccessIssue]
-            
         else:
-            # Manejo de error si la tasa no está disponible
             producto.price_ves = None # pyright: ignore[reportAttributeAccessIssue]
-    return render(request, 'tienda.html', {'productos': productos, 'sent_view': True, 'cantidad':numero_productos, 'bolivar_rate': bolivar_rate})
+
+    # 6. Retornar los datos filtrados y los valores activos para rellenar el formulario
+    return render(request, 'tienda.html',
+    {
+        'productos': productos,
+        'sent_view': True,
+        'cantidad': numero_productos,
+        'bolivar_rate': bolivar_rate,
+        'categorias': CATEGORIA_CHOICES,
+        'current_category': category_code, # Usado para la categoría activa
+        'min_price': min_price,           # Nuevo: Usado para rellenar el input de precio mínimo
+        'max_price': max_price            # Nuevo: Usado para rellenar el input de precio máximo
+    })
 
 def carrito(request):
     return render(request, 'carrito.html')
 
+
+@login_required
 def user_details(request):
-    return render(request, 'user_detail.html')
+    username = request.user.username
+
+    contexto = {
+        'username': username
+    }
+
+    return render(request, 'user_detail.html', contexto)
+
+@login_required
+def products_items(request, producto_id:int):
+    productos = Producto.objects.filter(user=request.user, datecompleted__isnull=True)
+
+    producto = get_object_or_404(Producto, pk=producto_id, user=request.user)
+    return render(request, 'products_items.html', {'productos': productos})
 
 def signup(request):
     """Gestiona el registro de nuevos usuarios.
@@ -164,33 +222,45 @@ def signup(request):
     Returns:
         Un objeto HttpResponse que:
         - Renderiza 'signup.html' con el formulario (GET).
-        - Redirige a 'products' (POST exitoso).
+        - Redirige a 'tienda' (POST exitoso).
         - Renderiza 'signup.html' con el formulario y un mensaje de error (POST fallido).
     """
     if request.method == 'GET':
+        # Nota: Estamos usando UserCreationForm, pero si queremos un campo de email requerido
+        # debemos crear un formulario personalizado (ProductUserCreationForm).
+        # Para simplificar y usar solo el campo email *adicional*, modificaremos el POST.
+        # Sin embargo, lo ideal es crear un formulario personalizado para validación.
         return render(request, 'signup.html', {
-        'form': UserCreationForm
+            'form': UserCreationForm # Podrías cambiar esto a un formulario personalizado si requieres validación estricta de email
         })
     else:
+        # **CAMBIO CLAVE AQUÍ**
+        # 1. Obtener el email del POST.
+        # 2. Pasarlo a User.objects.create_user.
         if request.POST['password1'] == request.POST['password2']:
             try:
-                # register user
-                user = User.objects.create_user(username=request.POST['username'], password=request.POST['password1'])
+                # El campo 'email' está disponible en el request.POST ya que lo añadiremos en el HTML
+                user = User.objects.create_user(
+                    username=request.POST['username'],
+                    email=request.POST['email'],  # <--- AÑADIDO: El campo email
+                    password=request.POST['password1']
+                )
                 user.save()
                 login(request, user)
                 return redirect('tienda')
             
             except IntegrityError:
+                # La integridad puede fallar por username duplicado (y ahora por email duplicado si lo haces unique)
                 return render(request, 'signup.html', {
-                    'form': UserCreationForm,
-                    'error': "User alredy exists"
+                    'form': UserCreationForm, # El formulario que se renderizará en caso de error
+                    'error': "User alredy exists or email is already registered"
                 })
 
         return render(request, 'signup.html', {
-                    'form': UserCreationForm,
-                    'error': "Password do not match"
-                })
-
+            'form': UserCreationForm, # El formulario que se renderizará en caso de error
+            'error': "Password do not match"
+        })
+    
 @login_required
 def signout(request):
     """Cierra la sesión del usuario actual y redirige a la página de inicio.
@@ -239,89 +309,129 @@ def signin(request):
             login(request, user)
             return redirect('tienda')
         
-products/templates/signin.html
+
+products/templates/tienda.html
 
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<main class="container py-5">
-    <div class="row">
-        <section class="col-md-6 offset-md-3 col-lg-4 offset-lg-4">
-            <form action="/signin/" method="POST" class="card card-body p-5 shadow-lg bg-white border-0">
-                <h1 class="text-center text-primary mb-4 fw-bold"><i class="fa-solid fa-right-to-bracket me-2"></i>Iniciar Sesión</h1>
-                
-                {% if error %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ error }}
+        <main class="py-5 bg-light">
+            <div class="container">
+                <h1 class="mb-5 fw-bold text-center text-warning">Explora Todos Nuestros Productos</h1>
+                <div class="row">
+                    <div class="col-lg-3 mb-4">
+                        <div class="card shadow-lg sticky-top" style="top: 80px;">
+                            
+                            <div class="card-header bg-danger text-white fw-bold">
+                                <i class="fa-solid fa-filter me-2"></i>Filtros de Búsqueda
+                            </div>
+                            <div class="card-body">
+                                
+                                <!-- ==================================================CATEGORIAS=========================================================== -->
+                                
+                                    
+                                <div class="mb-4 pb-2 border-bottom">
+                                    <h5 class="fw-bold text-dark mb-3">Categorías</h5>
+                                    <ul class="list-unstyled small">
+                                        <li><a href="{% url 'tienda' %}?min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}" class="text-decoration-none d-block py-1 
+                                                {% if not current_category %}text-warning fw-bold{% else %}text-muted{% endif %}">Todas las categorías</a></li>
+                                        {% for codigo, nombre in categorias %}
+                                        <li><a href="?category={{ codigo }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}" class="text-decoration-none d-block py-1 {% if current_category == codigo %}text-warning fw-bold{% else %}text-muted{% endif %}">{{ nombre }}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                <!-- =============================================================================================================================== -->
+
+                                <!-- =========================================================RANGO PRECIO=========================================================== -->
+                                <div class="mb-4 pb-2 border-bottom">
+                                    <h5 class="fw-bold text-dark mb-3">Rango de Precio</h5>
+                                    <form method="GET" action="{% url 'tienda' %}">
+                                        {% if current_category %}
+                                            <input type="hidden" name="category" value="{{ current_category }}">
+                                        {% endif %}
+
+                                        <div class="mb-3">
+                                            <label for="min_price" class="form-label small text-danger">Precio Mínimo ($)</label>
+                                            <input type="number" name="min_price" id="min_price" class="form-control form-control-sm text-warning" 
+                                                   value="{{ min_price|default:'0' }}" min="0" step="1">
+                                        </div>
+
+                                        <div class="col">
+                                            <label for="max_price" class="form-label small text-danger">Precio Máximo ($)</label>
+                                            <input type="number"
+                                            name="max_price" id="max_price" class="form-control form-control-sm  text-warning" 
+                                                   value="{{ max_price|default:'1500' }}" min="0" step="1">
+                                        </div>
+
+                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100 mt-1">Aplicar Filtro</button>
+                                    </form>
+                                </div>
+                                <!-- =============================================================================================================================== -->
+                                <!-- =============================================================================================================================== -->
+                            </div>
+                        </div>
                     </div>
-                {% endif %}
-                
-                {% csrf_token %}
-                
-                <div class="mb-3">
-                    <label for="id_username" class="form-label fw-bold">Nombre de Usuario:</label>
-                    <input type="text" name="username" class="form-control" placeholder="Escribe tu nombre de usuario" required id="id_username">
-                </div>
 
-                <div class="mb-4">
-                    <label for="id_password" class="form-label fw-bold">Contraseña:</label>
-                    <input type="password" name="password" class="form-control" placeholder="Escribe tu contraseña" required id="id_password">
-                </div>
+                    <div class="col-lg-9">
+                        
+                        <!-- =========================================================MOSTRAR PRODUCTOS=========================================================== -->
+                        <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border border-info">
+                            <p class="mb-0 text-muted small">Mostrando {{ cantidad }} ** productos disponibles</p>
+                            <!-- <div class="d-flex align-items-center">
+                                <label for="sort-by" class="form-label me-2 mb-0 d-none d-md-block small fw-bold">Ordenar por:</label>
+                                <select class="form-select form-select-sm" id="sort-by" style="width: auto;">
+                                    <option selected>Más Relevante</option>
+                                    <option value="1">Precio: Menor a Mayor</option>
+                                    <option value="2">Precio: Mayor a Menor</option>
+                                </select>
+                            </div> -->
+                        </div>
+                        <!-- ======================================================================================================================================= -->
 
-                <button class="btn btn-primary btn-lg">
-                    <i class="fa-solid fa-user me-2"></i>Iniciar Sesión
-                </button>
-                <small class="text-center mt-3 text-muted">¿No tienes cuenta? <a href="/signup/" class="text-primary fw-bold">Regístrate aquí</a></small>
+                        <!-- =========================================================PRODUCTOS CONTENEDOR=========================================================== -->
+                        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-3 g-4 articles-products">
+                            <!-- =========================================================PRODUCTOS=========================================================== -->
+                            {% for producto in productos %}
+                            <div class="col">
+                                <div class="card h-100 shadow-lg products">
+                                    <img src="{{ producto.imagen.url }}" class="card-img-top products-img" alt="{{ producto.title }}" style="height: 250px; object-fit: cover;">
+                                    <div class="card-body d-flex flex-column products-info">
+                                        <h5 class="card-title product-title">{{ producto.title }}</h5>
+                                        <p class="card-text product-description flex-grow-1">{{ producto.description }}</p>
+                                        <span class="fs-4 fw-bold text-success price">{{ producto.price }}$</span>
+                                        <div class="d-flex justify-content-between align-items-center mt-3">
+                                            
+                                            <span class="fs-4 fw-bold text-warning price-bolivar">({{ producto.price_ves|floatformat:2 }}Bs)</span>
+                                            <button class="btn btn-danger btn-sm"><i class="fa-solid fa-cart-plus me-1"></i>Añadir</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
 
-            </form>
-        </section>
-    </div>
-</main>
-{% endblock %}
-
-products/templates/signup.html
-
-{% extends 'base.html' %}
-
-{% block content %}
-<main class="container py-5">
-    <div class="row">
-        <div class="col-md-6 offset-md-3 col-lg-4 offset-lg-4">
-            <form method="POST" class="card card-body p-5 shadow-lg bg-white border-0">
-
-                <h1 class="text-center text-info mb-4 fw-bold"><i class="fa-solid fa-circle-plus me-2"></i>Registrarse</h1>
-                
-                {% if error %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ error }}
+                            <!-- ==================================================================================================================================== -->
+                        <!-- ======================================================================================================================================== -->
+                        </div>
+                        
                     </div>
-                {% endif %}
-                
-                {% csrf_token %}
+                    </div>
+            </div>
+        </main>
 
-                <div class="mb-3">
-                    <label for="id_username" class="form-label fw-bold">Nombre de Usuario:</label>
-                    <input type="text" name="username" class="form-control" placeholder="Escribe tu nombre de usuario" required id="id_username">
+        <footer class="bg-dark text-white pt-4 pb-2">
+            <div class="container text-center">
+                <div class="social-media mb-3">
+                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x"></i></a>
+                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x"></i></a>
+                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-facebook fa-2x"></i></a>
+                    <a href="+58 422-5924400" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x"></i></a>
                 </div>
-
-                <div class="mb-3">
-                    <label for="id_password1" class="form-label fw-bold">Contraseña:</label>
-                    <input type="password" name="password1" class="form-control" placeholder="Escribe tu contraseña" required id="id_password1">
+                <div class="footer-logo mb-3">
+                    <img src="{% static 'img/Logo_Triven.svg' %}" width="70" alt="Logotipo Trivens">
                 </div>
-
-                <div class="mb-4">
-                    <label for="id_password2" class="form-label fw-bold">Confirmar Contraseña:</label>
-                    <input type="password" name="password2" class="form-control" placeholder="Confirma tu contraseña" required id="id_password2">
-                </div>
-                
-                <button class="btn btn-info btn-lg">
-                    <i class="fa-solid fa-paper-plane me-2"></i>Registrarse
-                </button>
-                <small class="text-center mt-3 text-muted">¿Ya tienes cuenta? <a href="/signin/" class="text-info fw-bold">Inicia sesión aquí</a></small>
-
-            </form>
-        </div>
-    </div>
-</main>
+                <p class="text-muted"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
+            </div>
+        </footer>
+        
 {% endblock %}
-

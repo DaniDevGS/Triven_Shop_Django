@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+        <main>
+            
+            <section id="seccion-username">
+                <h1>Panel detalles de usuario</h1>
+                <p>Bienvenido al panel de usuario</p>
+                <h2>{{ username }}</h2>
+                <article></article>
+                <a href="logout/" class="nav-link text-danger ms-lg-2"><i class="fa-solid fa-door-open me-1"></i>Cerrar Sesión</a>
+            </section>
+
+        </main>
+
+
+<!-- =======================================================FOOTER DE CONTACTOS========================================================================== -->
+        <footer class="bg-dark text-white pt-4 pb-2 container-fluid">
+            <div class="container text-center">
+                <div class="social-media mb-3">
+                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x"></i></a>
+                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x"></i></a>
+                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-facebook fa-2x"></i></a>
+                    <a href="+58 422-5924400" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x"></i></a>
+                </div>
+                <div class="footer-logo mb-3">
+                    <img src="{% static 'img/Logo_Triven.svg' %}" width="70" alt="Logotipo Trivens">
+                </div>
+                <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
+                
+            </div>
+        </footer>
+{% endblock %}

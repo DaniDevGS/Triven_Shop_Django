@@ -4,23 +4,27 @@
 {% block content %}
         <main class="py-5 bg-light">
             <div class="container">
-                <h1 class="mb-5 fw-bold text-center text-secondary">Explora Todos Nuestros Productos</h1>
+                <h1 class="mb-5 fw-bold text-center text-warning">Explora Todos Nuestros Productos</h1>
                 <div class="row">
                     <div class="col-lg-3 mb-4">
                         <div class="card shadow-lg sticky-top" style="top: 80px;">
                             
-                            <div class="card-header bg-primary text-white fw-bold">
+                            <div class="card-header bg-danger text-white fw-bold">
                                 <i class="fa-solid fa-filter me-2"></i>Filtros de Búsqueda
                             </div>
                             <div class="card-body">
                                 
                                 <!-- ==================================================CATEGORIAS=========================================================== -->
+                                
+                                    
                                 <div class="mb-4 pb-2 border-bottom">
                                     <h5 class="fw-bold text-dark mb-3">Categorías</h5>
                                     <ul class="list-unstyled small">
-                                        <li><a href="#" class="text-decoration-none text-muted d-block py-1">Salud y Belleza</a></li>
-                                        <li><a href="#" class="text-decoration-none text-muted d-block py-1">Higiene</a></li>
-                                        <li><a href="#" class="text-decoration-none text-muted d-block py-1">Comestibles</a></li>
+                                        <li><a href="{% url 'tienda' %}?min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}" class="text-decoration-none d-block py-1 
+                                                {% if not current_category %}text-warning fw-bold{% else %}text-muted{% endif %}">Todas las categorías</a></li>
+                                        {% for codigo, nombre in categorias %}
+                                        <li><a href="?category={{ codigo }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}" class="text-decoration-none d-block py-1 {% if current_category == codigo %}text-warning fw-bold{% else %}text-muted{% endif %}">{{ nombre }}</a></li>
+                                        {% endfor %}
                                     </ul>
                                 </div>
                                 <!-- =============================================================================================================================== -->
@@ -28,40 +32,28 @@
                                 <!-- =========================================================RANGO PRECIO=========================================================== -->
                                 <div class="mb-4 pb-2 border-bottom">
                                     <h5 class="fw-bold text-dark mb-3">Rango de Precio</h5>
-                                    <form>
-                                        <label for="priceRange" class="form-label small text-muted">Ajustar rango</label>
-                                        <input type="range" class="form-range" min="1" max="1500" id="priceRange" value="500">
-                                        <div class="d-flex justify-content-between">
-                                            <small class="text-muted fw-bold">$1</small>
-                                            <small class="text-muted fw-bold">$1500+</small>
+                                    <form method="GET" action="{% url 'tienda' %}">
+                                        {% if current_category %}
+                                            <input type="hidden" name="category" value="{{ current_category }}">
+                                        {% endif %}
+
+                                        <div class="mb-3">
+                                            <label for="min_price" class="form-label small text-danger">Precio Mínimo ($)</label>
+                                            <input type="number" name="min_price" id="min_price" class="form-control form-control-sm text-warning" 
+                                                   value="{{ min_price|default:'0' }}" min="0" step="1">
                                         </div>
-                                        <button type="submit" class="btn btn-sm btn-outline-primary w-100 mt-3">Aplicar Filtro</button>
+
+                                        <div class="col">
+                                            <label for="max_price" class="form-label small text-danger">Precio Máximo ($)</label>
+                                            <input type="number"
+                                            name="max_price" id="max_price" class="form-control form-control-sm  text-warning" 
+                                                   value="{{ max_price|default:'1500' }}" min="0" step="1">
+                                        </div>
+
+                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100 mt-1">Aplicar Filtro</button>
                                     </form>
                                 </div>
                                 <!-- =============================================================================================================================== -->
-
-                                <!-- =====================================================VALORACION MINIMA========================================================== -->
-                                <div class="mb-0">
-                                    <h5 class="fw-bold text-dark mb-3">Valoración Mínima</h5>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="ratingFilter" id="rating5" checked>
-                                        <label class="form-check-label" for="rating5">
-                                            <i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i>
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="ratingFilter" id="rating4">
-                                        <label class="form-check-label" for="rating4">
-                                            <i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i> & Arriba
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="ratingFilter" id="rating3">
-                                        <label class="form-check-label" for="rating3">
-                                            <i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i> & Arriba
-                                        </label>
-                                    </div>
-                                </div>
                                 <!-- =============================================================================================================================== -->
                             </div>
                         </div>
@@ -71,17 +63,15 @@
                         
                         <!-- =========================================================MOSTRAR PRODUCTOS=========================================================== -->
                         <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border border-info">
-                            <p class="mb-0 text-muted small">Mostrando **1-12 de {{ cantidad }} ** productos disponibles</p>
-                            <div class="d-flex align-items-center">
+                            <p class="mb-0 text-muted small">Mostrando {{ cantidad }} ** productos disponibles</p>
+                            <!-- <div class="d-flex align-items-center">
                                 <label for="sort-by" class="form-label me-2 mb-0 d-none d-md-block small fw-bold">Ordenar por:</label>
                                 <select class="form-select form-select-sm" id="sort-by" style="width: auto;">
                                     <option selected>Más Relevante</option>
                                     <option value="1">Precio: Menor a Mayor</option>
                                     <option value="2">Precio: Mayor a Menor</option>
-                                    <option value="3">Novedades</option>
-                                    <option value="4">Mejor Valorados</option>
                                 </select>
-                            </div>
+                            </div> -->
                         </div>
                         <!-- ======================================================================================================================================= -->
 
@@ -90,50 +80,26 @@
                             <!-- =========================================================PRODUCTOS=========================================================== -->
                             {% for producto in productos %}
                             <div class="col">
-                                <div class="card h-100 shadow-lg products">
-                                    <img src="{{ producto.imagen.url }}" class="card-img-top products-img" alt="{{ producto.title }}" style="height: 250px; object-fit: cover;">
-                                    <div class="card-body d-flex flex-column products-info">
-                                        <h5 class="card-title product-title">{{ producto.title }}</h5>
-                                        <!-- <div class="mb-2">
-                                            <i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-regular fa-star text-warning"></i>
-                                            <small class="text-muted">(120)</small>
-                                        </div> -->
-                                        <p class="card-text product-description flex-grow-1">{{ producto.description }}</p>
-                                        <button class="btn-sm btn-danger" ><span class="fs-4 fw-bold text-primary price">Cantidad:{{ producto.cantidad }}</span></button>
-                                        <span class="fs-4 fw-bold text-success price">{{ producto.price }}$</span>
-                                        <div class="d-flex justify-content-between align-items-center mt-3">
-                                            
-                                            <span class="fs-4 fw-bold text-warning price-bolivar">{{ producto.price_ves|floatformat:2 }}Bs</span>
-                                            <button class="btn btn-primary btn-sm"><i class="fa-solid fa-cart-plus me-1"></i>Añadir</button>
+                                <a href="{% url 'products_items' producto.id %}" class="text-decoration-none text-dark d-block h-100">
+                                    <div class="card h-100 shadow-lg products hover-shadow-lg">
+                                        <img src="{{ producto.imagen.url }}" class="card-img-top products-img" alt="{{ producto.title }}" style="height: 250px; object-fit: cover;">
+                                        <div class="card-body d-flex flex-column products-info">
+                                            <h5 class="card-title product-title">{{ producto.title }}</h5>
+                                            <p class="card-text product-description flex-grow-1">{{ producto.description }}</p>
+                                            <span class="fs-4 fw-bold text-success price">{{ producto.price }}$</span>
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                
+                                                <span class="fs-4 fw-bold text-warning price-bolivar">({{ producto.price_ves|floatformat:2 }}Bs)</span>
+                                                <button class="btn btn-danger btn-sm"><i class="fa-solid fa-cart-plus me-1"></i>Añadir</button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </a>
                             </div>
                             {% endfor %}
 
                             <!-- ==================================================================================================================================== -->
                         <!-- ======================================================================================================================================== -->
-                        </div>
-                        
-
-                        <div class="d-flex justify-content-center mt-5">
-                            <nav aria-label="Navegación de Productos">
-                                <ul class="pagination shadow-sm">
-                                    <li class="page-item disabled">
-                                        <a class="page-link" href="#" aria-label="Anterior">
-                                            <span aria-hidden="true">&laquo;</span> Anterior
-                                        </a>
-                                    </li>
-                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#" aria-label="Siguiente">
-                                            Siguiente <span aria-hidden="true">&raquo;</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
                         </div>
                         
                     </div>

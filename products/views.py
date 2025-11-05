@@ -5,7 +5,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 from .forms import ProductForm
 from .serializers import ItemSerializer
-from .models import Producto
+from .models import Producto, CATEGORIA_CHOICES
 from.conversion import get_exchange_rate
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
@@ -119,30 +119,104 @@ def index(request):
 
 
 def products_store(request):
-    productos = Producto.objects.filter(datecompleted__isnull=False).order_by('-datecompleted')
+    # 1. Obtener parámetros de filtro de la URL (GET request)
+    category_code = request.GET.get('category')
+    min_price_str = request.GET.get('min_price') # Nuevo: Precio Mínimo
+    max_price_str = request.GET.get('max_price') # Nuevo: Precio Máximo
+    
+    # 2. Inicializar el queryset base
+    productos_queryset = Producto.objects.filter(datecompleted__isnull=False)
+
+    # 3. Aplicar filtro de CATEGORÍA
+    # Nota: Usaremos 'categoria' en el filtro de Django para coincidir con el error que tenías,
+    # que indica que ese es el nombre del campo en tu modelo/DB.
+    if category_code:
+        productos_queryset = productos_queryset.filter(category=category_code)
+
+    # 4. Aplicar filtro de PRECIO
+    
+    # Conversión segura del precio mínimo
+    if min_price_str and min_price_str.isdigit():
+        min_price = Decimal(min_price_str)
+        # Filtra productos donde el 'price' sea mayor o igual al mínimo
+        productos_queryset = productos_queryset.filter(price__gte=min_price)
+    else:
+        min_price = None
+
+    # Conversión segura del precio máximo
+    if max_price_str and max_price_str.isdigit():
+        max_price = Decimal(max_price_str)
+        # Filtra productos donde el 'price' sea menor o igual al máximo
+        productos_queryset = productos_queryset.filter(price__lte=max_price)
+    else:
+        max_price = None
+        
+    # 5. Ordenar el queryset final y obtener la cantidad
+    productos = productos_queryset.order_by('-datecompleted')
     numero_productos = productos.count()
 
+    # ... (código de tasa de bolívar - lo mantienes igual) ...
     bolivar_rate = get_exchange_rate()
 
     if bolivar_rate is not None:
-        bolivar_rate = Decimal(str(bolivar_rate)) # Usamos str() para evitar imprecisiones del float
+        bolivar_rate = Decimal(str(bolivar_rate)) 
 
     for producto in productos:
         if bolivar_rate is not None:
-            # Ahora la operación es Decimal * Decimal
             conversion = producto.price * bolivar_rate
             producto.price_ves = conversion # pyright: ignore[reportAttributeAccessIssue]
-            
         else:
-            # Manejo de error si la tasa no está disponible
             producto.price_ves = None # pyright: ignore[reportAttributeAccessIssue]
-    return render(request, 'tienda.html', {'productos': productos, 'sent_view': True, 'cantidad':numero_productos, 'bolivar_rate': bolivar_rate})
+
+    # 6. Retornar los datos filtrados y los valores activos para rellenar el formulario
+    return render(request, 'tienda.html',
+    {
+        'productos': productos,
+        'sent_view': True,
+        'cantidad': numero_productos,
+        'bolivar_rate': bolivar_rate,
+        'categorias': CATEGORIA_CHOICES,
+        'current_category': category_code, # Usado para la categoría activa
+        'min_price': min_price,           # Nuevo: Usado para rellenar el input de precio mínimo
+        'max_price': max_price            # Nuevo: Usado para rellenar el input de precio máximo
+    })
 
 def carrito(request):
     return render(request, 'carrito.html')
 
+
+@login_required
 def user_details(request):
-    return render(request, 'user_detail.html')
+    username = request.user.username
+
+    contexto = {
+        'username': username
+    }
+
+    return render(request, 'user_detail.html', contexto)
+
+@login_required
+def products_items(request, products_id:int):
+    producto = get_object_or_404(
+        Producto, 
+        pk=products_id, 
+        datecompleted__isnull=False # Asegura que solo se muestren productos 'enviados' (a la venta)
+    )
+    
+    # Aquí puedes añadir la lógica de conversión a Bs. si es necesaria, 
+    bolivar_rate = get_exchange_rate()
+
+    if bolivar_rate is not None:
+        bolivar_rate = Decimal(str(bolivar_rate)) 
+
+        if bolivar_rate is not None:
+            conversion = producto.price * bolivar_rate
+            producto.price_ves = conversion # pyright: ignore[reportAttributeAccessIssue]
+        else:
+            producto.price_ves = None # pyright: ignore[reportAttributeAccessIssue]
+    # pero para simplificar, la dejaremos solo en la lista por ahora.
+    
+    return render(request, 'products_items.html', {'producto': producto, 'bolivar_rate': bolivar_rate})
 
 def signup(request):
     """Gestiona el registro de nuevos usuarios.
@@ -159,33 +233,45 @@ def signup(request):
     Returns:
         Un objeto HttpResponse que:
         - Renderiza 'signup.html' con el formulario (GET).
-        - Redirige a 'products' (POST exitoso).
+        - Redirige a 'tienda' (POST exitoso).
         - Renderiza 'signup.html' con el formulario y un mensaje de error (POST fallido).
     """
     if request.method == 'GET':
+        # Nota: Estamos usando UserCreationForm, pero si queremos un campo de email requerido
+        # debemos crear un formulario personalizado (ProductUserCreationForm).
+        # Para simplificar y usar solo el campo email *adicional*, modificaremos el POST.
+        # Sin embargo, lo ideal es crear un formulario personalizado para validación.
         return render(request, 'signup.html', {
-        'form': UserCreationForm
+            'form': UserCreationForm # Podrías cambiar esto a un formulario personalizado si requieres validación estricta de email
         })
     else:
+        # **CAMBIO CLAVE AQUÍ**
+        # 1. Obtener el email del POST.
+        # 2. Pasarlo a User.objects.create_user.
         if request.POST['password1'] == request.POST['password2']:
             try:
-                # register user
-                user = User.objects.create_user(username=request.POST['username'], password=request.POST['password1'])
+                # El campo 'email' está disponible en el request.POST ya que lo añadiremos en el HTML
+                user = User.objects.create_user(
+                    username=request.POST['username'],
+                    email=request.POST['email'],  # <--- AÑADIDO: El campo email
+                    password=request.POST['password1']
+                )
                 user.save()
                 login(request, user)
                 return redirect('tienda')
             
             except IntegrityError:
+                # La integridad puede fallar por username duplicado (y ahora por email duplicado si lo haces unique)
                 return render(request, 'signup.html', {
-                    'form': UserCreationForm,
-                    'error': "User alredy exists"
+                    'form': UserCreationForm, # El formulario que se renderizará en caso de error
+                    'error': "User alredy exists or email is already registered"
                 })
 
         return render(request, 'signup.html', {
-                    'form': UserCreationForm,
-                    'error': "Password do not match"
-                })
-
+            'form': UserCreationForm, # El formulario que se renderizará en caso de error
+            'error': "Password do not match"
+        })
+    
 @login_required
 def signout(request):
     """Cierra la sesión del usuario actual y redirige a la página de inicio.

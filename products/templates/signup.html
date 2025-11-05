@@ -22,6 +22,11 @@
                 </div>
 
                 <div class="mb-3">
+                    <label for="id_email" class="form-label fw-bold">Correo Electrónico (Gmail):</label>
+                    <input type="email" name="email" class="form-control" placeholder="ejemplo@gmail.com" required id="id_email">
+                </div>
+
+                <div class="mb-3">
                     <label for="id_password1" class="form-label fw-bold">Contraseña:</label>
                     <input type="password" name="password1" class="form-control" placeholder="Escribe tu contraseña" required id="id_password1">
                 </div>
@@ -34,7 +39,7 @@
                 <button class="btn btn-info btn-lg">
                     <i class="fa-solid fa-paper-plane me-2"></i>Registrarse
                 </button>
-                <small class="text-center mt-3 text-muted">¿Ya tienes cuenta? <a href="/signin/" class="text-info fw-bold">Inicia sesión aquí</a></small>
+                <small class="text-center mt-3 text-muted">¿Ya tienes cuenta? <a href="{% url 'signin' %}" class="text-info fw-bold">Inicia sesión aquí</a></small>
 
             </form>
         </div>

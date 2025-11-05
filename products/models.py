@@ -1,6 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
+CATEGORIA_CHOICES = (
+    ('SALUD', 'Salud y Belleza'),
+    ('HIGIENE', 'Higiene'),
+    ('COMESTIBLES', 'Comestibles'),
+    ('OTROS', 'Otros'),
+)
+
+
+
 # Create your models here.
 class Producto(models.Model):
     title = models.CharField(max_length=100)
@@ -10,6 +20,9 @@ class Producto(models.Model):
     cantidad = models.IntegerField(default=1) # Usaremos IntegerField para la cantidad
     imagen = models.ImageField(upload_to='productos/', null=True, blank=True)
     datecompleted = models.DateTimeField(null=True, blank=True)
+    
+    category = models.CharField(max_length=11, choices=CATEGORIA_CHOICES, default="OTROS")
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):

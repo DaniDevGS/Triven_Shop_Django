@@ -1,221 +1,88 @@
 {% extends 'base.html' %}
-{% load static %}
-
 {% block content %}
-    <main class="container py-5">
-        <h1 class="mb-4 fw-bold">🛒 Carrito de Compras</h1>
+<style>
+/* ... (Tus estilos CSS aquí, incluyendo el .dot-spinner y #imagen_previa) ... */
+    #spinner-container {
+        display: none; /* Inicialmente oculto */
+    }
+</style>
 
-        {% if items %}
-        <div class="row">
-            <div class="col-lg-8">
-                {% for item in items %}
-                <div class="card mb-3 shadow-sm cart-item">
-                    <div class="row g-0">
-                        <div class="col-md-3 p-3 d-flex align-items-center justify-content-center">
-                            <img src="{{ item.imagen_url }}" class="img-fluid rounded-start" alt="{{ item.title }}" style="max-height: 150px; object-fit: contain;">
-                        </div>
-                        <div class="col-md-9">
-                            <div class="card-body">
-                                <h5 class="card-title fw-bold">{{ item.title }}</h5>
-                                
-                                <div class="d-flex align-items-center mb-3">
-                                    <form action="{% url 'update_cart_quantity' item.producto_id %}" method="POST" class="d-flex align-items-center mb-0 me-4">
-                                    {% csrf_token %}
-                                    <label for="qty-{{ item.producto_id }}" class="form-label me-3 mb-0 fw-semibold">Cantidad:</label>
-                                    <input type="number"
-                                        name="cantidad"
-                                        id="qty-{{ item.producto_id }}"
-                                        class="form-control form-control-sm me-3"
-                                        value="{{ item.cantidad }}"
-                                        min="1"
-                                        style="width: 70px;"
-                                        onchange="this.form.submit()">
-                                    </form>
+<main class="container py-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2 col-lg-6 offset-lg-3">
+            <h1 class="text-center fw-bold text-dark mb-4">
+                <i class="fa-solid fa-credit-card me-2 text-danger"></i>Finalizar Compra
+            </h1>
 
-                                    <span class="fs-5 fw-bold text-success me-4 price">${{ item.total_item_usd|floatformat:2 }} USD</span>
-                                    
-                                    {% if item.total_item_ves %}
-                                    <span class="fs-5 fw-bold text-warning price">Bs. {{ item.total_item_ves|floatformat:2 }} VES</span>
-                                    {% endif %}
-                                </div>
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message|safe }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            <div class="card card-body p-4 shadow-lg bg-light border-0 mb-4">
+                <h2 class="text-danger mb-3 fw-bold">Pasos para el Pago</h2>
+                
+                <article class="mb-3 border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">1. Identificador Único</h5>
+                    <p class="text-muted mb-0">El sistema le ha asignado un **ID único de compra**. Utilícelo para referenciar su pago.</p>
+                </article>
 
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="text-muted small">Precio Unitario: ${{ item.price_usd|floatformat:2 }} USD</span>
-                                
-                                    <form method="POST" action="{% url 'remove_from_cart' item.producto_id %}" class="m-0">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-outline-danger btn-sm remove-item">
-                                            <i class="fa-solid fa-trash-can me-1"></i> Eliminar
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <article class="border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">2. Adjuntar Comprobante</h5>
+                    <p class="text-muted mb-0">Debe adjuntar una imagen clara del comprobante para que su pago sea validado exitosamente.</p>
+                </article>
+            </div>
+
+            <form action="{% url 'compra_productos' %}" method="POST" enctype="multipart/form-data" 
+                  class="card card-body p-5 shadow-lg bg-white border-0" id="payment-form"> 
+                {% csrf_token %}
+
+                <div class="mb-4 text-center p-3 border rounded bg-warning bg-opacity-10">
+                    <p class="mb-1 text-muted fw-bold">Su ID Único de Compra:</p>
+                    <p class="h4 fw-bold text-danger">{{ id_compra }}</p>
                 </div>
-                {% endfor %}
-                <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
-                    <a href="{% url 'tienda' %}" class="btn btn-outline-secondary">Continuar Comprando</a>
+
+                <div class="mb-4">
+                    <label for="id_compra_confirmacion" class="form-label fw-bold">Confirme su ID de compra</label>
+                    <input type="text" name="id_confirmacion" class="form-control" placeholder="Escriba su ID único (ej: {{ id_compra }})" maxlength="100" required id="id_compra_confirmacion">
+                </div>
+
+                <div class="mb-4">
+                    <label for="input_imagen" class="form-label fw-bold">
+                        <i class="fa-solid fa-image me-1"></i> Imagen de Comprobante:
+                    </label>
+                    <input type="file" id="input_imagen" name="imagen_comprobante" class="form-control" accept="image/png, image/jpeg, image/jpg" required/>
                     
-                    <form method="POST" action="{% url 'clear_cart' %}" class="m-0">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-warning">Vaciar Carrito</button>
-                    </form>
+                    <img id="imagen_previa" src="#" alt="Previsualización del comprobante de pago">
                 </div>
-            </div>
-            
-            <div class="col-lg-4 mt-4 mt-lg-0">
-                <div class="card sticky-top" style="top: 80px;">
-                    <div class="card-header bg-primary text-white fw-bold">
-                        Resumen del Pedido
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-group list-group-flush mb-3">
-                            <li class="list-group-item d-flex justify-content-between">
-                                {% with items|length as item_count %}
-                                <span>Subtotal ({{ item_count }} artículo{{ item_count|pluralize }}) en USD:</span>
-                                {% endwith %}
-                                <span class="fw-semibold">${{ subtotal_usd|floatformat:2 }}</span>
-                            </li>
-                            
-                            {% if subtotal_ves %}
-                            <li class="list-group-item d-flex justify-content-between">
-                                <span>Subtotal en Bolívares (Tasa: {{ bolivar_rate|floatformat:2 }} Bs./$):</span>
-                                <span class="fw-semibold">Bs. {{ subtotal_ves|floatformat:2 }}</span>
-                            </li>
-                            {% endif %}
+                
+                <button type="submit" class="btn btn-danger btn-lg w-100 mt-3" id="submit-button">
+                    <i class="fa-solid fa-circle-check me-2"></i> Validar Pago
+                </button>
+            </form>
 
-                            <li class="list-group-item d-flex justify-content-between">
-                                <span>Costo de Envío:</span>
-                                <span class="text-success fw-semibold">Gratis</span>
-                            </li>
-                            
-                            <li class="list-group-item d-flex justify-content-between">
-                                <span class="fs-5 fw-bold">Total a Pagar (USD):</span>
-                                <span class="fs-5 fw-bold text-primary">${{ subtotal_usd|floatformat:2 }}</span>
-                            </li>
-                        </ul>
-                        
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-warning btn-lg fw-bold">
-                                Proceder al Pago
-                            </button>
-                            <p class="text-center mt-2 text-muted"><small>La compra se procesara.</small></p>
-                        </div>
+            <div id="spinner-container" class="card card-body p-5 shadow-lg bg-white border-0 text-center mt-3">
+                <h5 class="text-dark fw-bold mb-3">
+                    <i class="fa-solid fa-hourglass-start me-2 text-danger"></i> Validando Pago y Procesando Orden...
+                </h5>
+                <p class="text-muted">Por favor, espere. Esto puede tardar unos segundos.</p>
+                <div class="d-flex justify-content-center">
+                    <div class="dot-spinner">
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
                     </div>
                 </div>
             </div>
         </div>
-
-        {% else %}
-        <div class="row justify-content-center my-5">
-            <div class="col-12 col-md-8 col-lg-6 text-center py-5 px-4 bg-white border border-2 rounded-3xl shadow-lg" style="border-style: dashed; border-color: #ced4da;">
-                <i class="fa-solid fa-bag-shopping fa-6x text-muted mb-4" style="opacity: 0.7;"></i>
-                
-                <h2 class="fw-bolder mb-3 text-dark">¡Tu Carrito Está Vacío!</h2>
-                
-                <p class="lead mb-4 text-secondary">
-                    Parece que aún no has agregado productos. Explora nuestras fantásticas ofertas y encuentra algo increíble para llenar este espacio.
-                </p>
-                
-                <a href="{% url 'tienda' %}" class="btn btn-primary btn-lg fw-bold shadow-sm">
-                    <i class="fa-solid fa-shop me-1"></i> Empezar a Comprar
-                </a>
-            </div>
-        </div>
-
-        {% endif %}
-
-        <hr class="my-5">
-
-        <section class="container py-3 products-section">
-            <div class="products-title text-center mb-5">
-                <h2 class="fw-bold">Productos Recomendados para ti</h2>
-            </div>
-            <div class="row row-cols-2 row-cols-md-4 g-4 articles-products">
-                
-                <div class="col">
-                    <div class="card h-100 shadow-sm products">
-                        <img src="/media/productos/Luke.jpg" class="card-img-top products-img" alt="Luke juguete" style="height: 180px; object-fit: cover;">
-                        <div class="card-body d-flex flex-column products-info p-3">
-                            <h6 class="card-title product-title mb-1">Luke juguete</h6>
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <span class="fw-bold text-success price">10$</span>
-                                <button class="btn btn-outline-primary btn-sm">
-                                    <i class="fa-solid fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col">
-                    <div class="card h-100 shadow-sm products">
-                        <img src="/media/productos/iPhone17.jpg" class="card-img-top products-img" alt="iPhone 17 Pro Max" style="height: 180px; object-fit: cover;">
-                        <div class="card-body d-flex flex-column products-info p-3">
-                            <h6 class="card-title product-title mb-1">iPhone 17 Pro Max</h6>
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <span class="fw-bold text-success price">10$</span>
-                                <button class="btn btn-outline-primary btn-sm">
-                                    <i class="fa-solid fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col">
-                    <div class="card h-100 shadow-sm products">
-                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
-                            <i class="fa-solid fa-gift fa-3x text-secondary"></i>
-                        </div>
-                        <div class="card-body d-flex flex-column products-info p-3">
-                            <h6 class="card-title product-title mb-1">Producto XYZ</h6>
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <span class="fw-bold text-success price">5$</span>
-                                <button class="btn btn-outline-primary btn-sm">
-                                    <i class="fa-solid fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col">
-                    <div class="card h-100 shadow-sm products">
-                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
-                            <i class="fa-solid fa-star fa-3x text-secondary"></i>
-                        </div>
-                        <div class="card-body d-flex flex-column products-info p-3">
-                            <h6 class="card-title product-title mb-1">Otro Producto</h6>
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <span class="fw-bold text-success price">15$</span>
-                                <button class="btn btn-outline-primary btn-sm">
-                                    <i class="fa-solid fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        
-    </main>
-
-    <hr>
-
-    <footer class="bg-dark text-white pt-4 pb-2">
-        <div class="container text-center">
-            <div class="social-media mb-3">
-                <a href="#" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x"></i></a>
-                <a href="#" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x"></i></a>
-                <a href="#" class="text-white mx-2"><i class="fa-brands fa-facebook fa-2x"></i></a>
-                <a href="+58 422-5924400" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x"></i></a>
-            </div>
-            <div class="footer-logo mb-3">
-                <img src="/products/static/IMG/Logo.jpg" width="100" alt="Logo Trivens">
-            </div>
-            <p class="text-muted"><small>&copy; 2025 Trivens Smart Shop. Todos los derechos reservados.</small></p>
-        </div>
-    </footer>
+    </div>
+</main>
 {% endblock %}

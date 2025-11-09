@@ -24,10 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECRET_KEY = 'django-insecure-60ys4jw_^x6^2*wdj12gn1!@4keatrrq%lgdtbrsa^svv98i9_'
 SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 
-
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-DEBUG = 'RENDER' not in os.environ
+DEBUG = True
+# DEBUG = 'RENDER' not in os.environ
 
 ALLOWED_HOSTS = []
 
@@ -76,6 +75,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'products.context_processors.manager_list',
             ],
         },
     },

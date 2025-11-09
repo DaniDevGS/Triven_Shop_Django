@@ -11,11 +11,9 @@
             <h1>{{ producto.title }}</h1>
             <p class="card-text product-description flex-grow-1">{{ producto.description }}</p>
             <span class="fs-4 fw-bold text-success price">{{ producto.price }}$</span>
-            <br>
             <span class="fs-4 fw-bold text-warning price-bolivar">({{ producto.price_ves|floatformat:2 }}Bs)</span>
             <button class="btn btn-danger btn-sm"><i class="fa-solid fa-cart-plus me-1"></i>Añadir</button>
         </section>
-
     </main>
 {% endblock %}
 

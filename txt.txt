@@ -1,0 +1,353 @@
+Actua como un desarrollador Full Stack y ayudame a implementar las funcion compra_productos con sus posibles errores a mi html pago.html. Estoy usando Django
+
+funciones de views.py
+
+
+@login_required
+def compra_productos(request):
+    """Maneja el formulario de pago, genera el ID único, registra la orden y reduce el stock."""
+    cart = request.session.get('cart', {})
+    
+    if not cart:
+        messages.error(request, "Tu carrito está vacío. No puedes proceder al pago.")
+        return redirect('carrito')
+
+    # --- Generación del ID Único (GET/POST) ---
+    # Usar un ID de 8 caracteres alfanumérico. 
+    if 'id_compra' not in request.session:
+        # Generar un UUID, tomar los primeros 8 caracteres y hacerlo mayúsculas.
+        unique_id = uuid.uuid4().hex[:8].upper()
+        request.session['id_compra'] = unique_id
+    
+    id_compra_actual = request.session['id_compra']
+
+    # --- LÓGICA POST: Procesar el pago y comprobante ---
+    if request.method == 'POST':
+        id_confirmacion = request.POST.get('id_confirmacion')
+        imagen_comprobante = request.FILES.get('imagen_comprobante')
+
+        if str(id_confirmacion).strip() != id_compra_actual:
+            messages.error(request, "El ID de compra confirmado no coincide con el asignado. Inténtalo de nuevo.")
+            return redirect('compra_productos')
+        
+        if not imagen_comprobante:
+            messages.error(request, "Debe adjuntar la imagen del comprobante de pago.")
+            return redirect('compra_productos')
+            
+        try:
+            total_orden_usd = Decimal(0.00)
+            items_detalle = []
+            
+            # Usar una transacción atómica para asegurar que la orden se crea
+            # y el stock se reduce, o se revierte todo.
+            with transaction.atomic():
+                
+                # 1. Crear la Orden de Compra Inicial
+                orden = OrdenDeCompra.objects.create(
+                    user=request.user,
+                    id_compra=id_compra_actual,
+                    subtotal_usd=Decimal(0.00), 
+                    estado='PENDIENTE' 
+                )
+
+                # 2. Recorrer el carrito, reducir stock y crear ItemOrden
+                for producto_id_str, data in cart.items():
+                    producto_id = int(producto_id_str)
+                    cantidad_comprada = data.get('cantidad', 1)
+                    precio_unidad = Decimal(str(data.get('price', 0.00)))
+                    
+                    producto = get_object_or_404(Producto, pk=producto_id)
+                    
+                    # Validación Final de Stock
+                    if producto.cantidad < cantidad_comprada:
+                        raise Exception(f"Stock insuficiente para **{producto.title}**. Solo quedan {producto.cantidad}.")
+
+                    # **REDUCCIÓN DE STOCK**
+                    producto.cantidad -= cantidad_comprada
+                    producto.save()
+
+                    # Crear el Item de la Orden
+                    ItemOrden.objects.create( 
+                        orden=orden,
+                        producto=producto,
+                        cantidad=cantidad_comprada,
+                        precio_unidad=precio_unidad
+                    )
+                    
+                    total_item_usd = precio_unidad * cantidad_comprada
+                    total_orden_usd += total_item_usd
+                    
+                    items_detalle.append({
+                        'title': producto.title,
+                        'cantidad': cantidad_comprada,
+                        'precio_unidad': precio_unidad
+                    })
+
+                # 3. Guardar Comprobante y Total en la Orden
+                orden.subtotal_usd = total_orden_usd
+                orden.imagen_comprobante.save(
+                    f'comprobante_{id_compra_actual}.{imagen_comprobante.name.split(".")[-1]}', 
+                    imagen_comprobante
+                )
+                orden.save()
+
+            # 4. Generar Enlace de WhatsApp con datos de la factura
+            # **IMPORTANTE**: No es posible adjuntar archivos (como el PDF) directamente 
+            # a través del enlace estándar de WhatsApp API/Web. Solo se puede enviar texto.
+            
+            # Número de teléfono de destino (Ejemplo: +584120000000)
+            whatsapp_number = "+58 424-9162800" 
+            
+            message = (
+                f"¡Nueva Orden de Compra (Validación)!\n"
+                f"ID de Compra: *{id_compra_actual}*\n"
+                f"Cliente: {request.user.username}\n"
+                f"Total Pagado: ${total_orden_usd:.2f}\n"
+                f"Productos:\n"
+            )
+            for item in items_detalle:
+                message += f"  - {item['title']} x{item['cantidad']} (${(item['precio_unidad'] * item['cantidad']):.2f})\n"
+            
+            message += "\n*Adjunté el capture del pago a esta conversación.*"
+            
+            encoded_message = urllib.parse.quote(message)
+            whatsapp_url = f"https://wa.me/{whatsapp_number}?text={encoded_message}"
+            
+            # 5. Limpiar sesión y mostrar éxito
+            # Si la transacción fue exitosa, borramos el carrito y el ID de sesión
+            del request.session['cart']
+            del request.session['id_compra']
+            request.session.modified = True
+            
+            messages.success(request, f"¡Pago registrado! ID: **{id_compra_actual}**. Serás redirigido para enviar el comprobante por WhatsApp.")
+            
+            return redirect(whatsapp_url)
+
+        except Exception as e:
+            messages.error(request, f"Ocurrió un error: {str(e)}. La compra no se ha completado y el stock no se redujo.")
+            # Si falla, el carrito y el ID de compra siguen en la sesión
+            return redirect('compra_productos')
+
+
+    # --- LÓGICA GET: Mostrar el formulario con el ID generado ---
+    context = {
+        'id_compra': id_compra_actual,
+    }
+    return render(request, 'pago.html', context)
+
+pago.html
+
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    /* Estilo para asegurar que la imagen de previsualización sea atractiva y responsiva */
+    #imagen_previa {
+        max-width: 100%;
+        height: auto;
+        max-height: 250px; /* Limita la altura para no ocupar demasiado espacio */
+        display: none; /* Inicialmente oculta hasta que se seleccione una imagen */
+        margin-top: 15px;
+        border: 2px solid #dc3545; /* Color rojo de tu marca (danger) */
+        border-radius: .3rem;
+        object-fit: contain; /* Asegura que la imagen completa se vea */
+    }
+
+    .dot-spinner {
+        --uib-size: 2.8rem;
+        --uib-speed: .9s;
+        --uib-color: #183153;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        height: var(--uib-size);
+        width: var(--uib-size);
+    }
+
+    .dot-spinner__dot {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        height: 100%;
+        width: 100%;
+    }
+
+    .dot-spinner__dot::before {
+        content: '';
+        height: 20%;
+        width: 20%;
+        border-radius: 50%;
+        background-color: var(--uib-color);
+        transform: scale(0);
+        opacity: 0.5;
+        animation: pulse0112 calc(var(--uib-speed) * 1.111) ease-in-out infinite;
+        box-shadow: 0 0 20px rgba(18, 31, 53, 0.3);
+    }
+
+    .dot-spinner__dot:nth-child(2) {
+        transform: rotate(45deg);
+    }
+
+    .dot-spinner__dot:nth-child(2)::before {
+        animation-delay: calc(var(--uib-speed) * -0.875);
+    }
+
+    .dot-spinner__dot:nth-child(3) {
+        transform: rotate(90deg);
+    }
+
+    .dot-spinner__dot:nth-child(3)::before {
+        animation-delay: calc(var(--uib-speed) * -0.75);
+    }
+
+    .dot-spinner__dot:nth-child(4) {
+        transform: rotate(135deg);
+    }
+
+    .dot-spinner__dot:nth-child(4)::before {
+        animation-delay: calc(var(--uib-speed) * -0.625);
+    }
+
+    .dot-spinner__dot:nth-child(5) {
+        transform: rotate(180deg);
+    }
+
+    .dot-spinner__dot:nth-child(5)::before {
+        animation-delay: calc(var(--uib-speed) * -0.5);
+    }
+
+    .dot-spinner__dot:nth-child(6) {
+        transform: rotate(225deg);
+    }
+
+    .dot-spinner__dot:nth-child(6)::before {
+        animation-delay: calc(var(--uib-speed) * -0.375);
+    }
+
+    .dot-spinner__dot:nth-child(7) {
+        transform: rotate(270deg);
+    }
+
+    .dot-spinner__dot:nth-child(7)::before {
+        animation-delay: calc(var(--uib-speed) * -0.25);
+    }
+
+    .dot-spinner__dot:nth-child(8) {
+        transform: rotate(315deg);
+    }
+
+    .dot-spinner__dot:nth-child(8)::before {
+        animation-delay: calc(var(--uib-speed) * -0.125);
+    }
+
+    @keyframes pulse0112 {
+        0%,
+        100% {
+            transform: scale(0);
+            opacity: 0.5;
+    }
+
+        50% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+
+</style>
+
+<main class="container py-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2 col-lg-6 offset-lg-3">
+            <h1 class="text-center fw-bold text-dark mb-4">
+                <i class="fa-solid fa-credit-card me-2 text-danger"></i>Finalizar Compra
+            </h1>
+
+            <div class="card card-body p-4 shadow-lg bg-light border-0 mb-4">
+                <h2 class="text-danger mb-3 fw-bold">Pasos para el Pago</h2>
+                
+                <article class="mb-3 border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">1. Identificador Único</h5>
+                    <p class="text-muted mb-0">El sistema le ha asignado un **ID único de compra**. Utilícelo para referenciar su pago.</p>
+                </article>
+
+                <article class="border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">2. Adjuntar Comprobante</h5>
+                    <p class="text-muted mb-0">Debe adjuntar una imagen clara del comprobante para que su pago sea validado exitosamente.</p>
+                </article>
+            </div>
+
+            <form action="" method="POST" enctype="multipart/form-data" class="card card-body p-5 shadow-lg bg-white border-0">
+                {% csrf_token %}
+
+                <div class="mb-4 text-center p-3 border rounded bg-warning bg-opacity-10">
+                    <p class="mb-1 text-muted fw-bold">Su ID Único de Compra:</p>
+                    <p class="h4 fw-bold text-danger">{{ id_compra }}</p>
+                    </div>
+
+                <div class="mb-4">
+                    <label for="id_compra" class="form-label fw-bold">Confirme su ID de compra</label>
+                    <input type="text" name="id_confirmacion" class="form-control" placeholder="Escriba su ID único" maxlength="100" required id="id_compra" value="{{ productos.id_compra|default:'' }}">
+                </div>
+
+                <div class="mb-4">
+                    <label for="input_imagen" class="form-label fw-bold">
+                        <i class="fa-solid fa-image me-1"></i> Imagen de Comprobante:
+                    </label>
+                    <input type="file" id="input_imagen" name="imagen_comprobante" class="form-control" accept="image/png, image/jpeg, image/jpg" required/>
+                    
+                    <img id="imagen_previa" src="#" alt="Previsualización del comprobante de pago">
+                </div>
+                
+                <button type="submit" class="btn btn-danger btn-lg w-100 mt-3">
+                    <i class="fa-solid fa-circle-check me-2"></i> Validar Pago
+                </button>
+            </form>
+
+            <!-- CARGAR DESPUES DE DARLE AL BOTON DE VALIDAR PAGO -->
+            <div class="card card-body p-5 shadow-lg bg-white border-0">
+                <div class="mb-4">
+                    <p>Pago siendo validado</p>
+                    <div class="dot-spinner">
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script>
+    document.getElementById('input_imagen').addEventListener('change', function(event) {
+        const input = event.target;
+        const imagenPrevia = document.getElementById('imagen_previa');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                imagenPrevia.src = e.target.result;
+                imagenPrevia.style.display = 'block'; // Muestra la imagen
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            imagenPrevia.src = '#';
+            imagenPrevia.style.display = 'none'; // Oculta si no hay archivo
+        }
+    });
+</script>
+{% endblock %}
+
++58 412-1834638

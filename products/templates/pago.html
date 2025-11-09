@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    /* Estilo para asegurar que la imagen de previsualización sea atractiva y responsiva */
+    #imagen_previa {
+        max-width: 100%;
+        height: auto;
+        max-height: 250px; /* Limita la altura para no ocupar demasiado espacio */
+        display: none; /* Inicialmente oculta hasta que se seleccione una imagen */
+        margin-top: 15px;
+        border: 2px solid #dc3545; /* Color rojo de tu marca (danger) */
+        border-radius: .3rem;
+        object-fit: contain; /* Asegura que la imagen completa se vea */
+    }
+
+    #spinner-container {
+        display: none; /* Inicialmente oculto */
+    }
+
+    .dot-spinner {
+        --uib-size: 2.8rem;
+        --uib-speed: .9s;
+        --uib-color: #183153;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        height: var(--uib-size);
+        width: var(--uib-size);
+    }
+
+    .dot-spinner__dot {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        height: 100%;
+        width: 100%;
+    }
+
+    .dot-spinner__dot::before {
+        content: '';
+        height: 20%;
+        width: 20%;
+        border-radius: 50%;
+        background-color: var(--uib-color);
+        transform: scale(0);
+        opacity: 0.5;
+        animation: pulse0112 calc(var(--uib-speed) * 1.111) ease-in-out infinite;
+        box-shadow: 0 0 20px rgba(18, 31, 53, 0.3);
+    }
+
+    .dot-spinner__dot:nth-child(2) {
+        transform: rotate(45deg);
+    }
+
+    .dot-spinner__dot:nth-child(2)::before {
+        animation-delay: calc(var(--uib-speed) * -0.875);
+    }
+
+    .dot-spinner__dot:nth-child(3) {
+        transform: rotate(90deg);
+    }
+
+    .dot-spinner__dot:nth-child(3)::before {
+        animation-delay: calc(var(--uib-speed) * -0.75);
+    }
+
+    .dot-spinner__dot:nth-child(4) {
+        transform: rotate(135deg);
+    }
+
+    .dot-spinner__dot:nth-child(4)::before {
+        animation-delay: calc(var(--uib-speed) * -0.625);
+    }
+
+    .dot-spinner__dot:nth-child(5) {
+        transform: rotate(180deg);
+    }
+
+    .dot-spinner__dot:nth-child(5)::before {
+        animation-delay: calc(var(--uib-speed) * -0.5);
+    }
+
+    .dot-spinner__dot:nth-child(6) {
+        transform: rotate(225deg);
+    }
+
+    .dot-spinner__dot:nth-child(6)::before {
+        animation-delay: calc(var(--uib-speed) * -0.375);
+    }
+
+    .dot-spinner__dot:nth-child(7) {
+        transform: rotate(270deg);
+    }
+
+    .dot-spinner__dot:nth-child(7)::before {
+        animation-delay: calc(var(--uib-speed) * -0.25);
+    }
+
+    .dot-spinner__dot:nth-child(8) {
+        transform: rotate(315deg);
+    }
+
+    .dot-spinner__dot:nth-child(8)::before {
+        animation-delay: calc(var(--uib-speed) * -0.125);
+    }
+
+    @keyframes pulse0112 {
+        0%,
+        100% {
+            transform: scale(0);
+            opacity: 0.5;
+    }
+
+        50% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+
+</style>
+
+<main class="container py-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2 col-lg-6 offset-lg-3">
+            <h1 class="text-center fw-bold text-dark mb-4">
+                <i class="fa-solid fa-credit-card me-2 text-danger"></i>Finalizar Compra
+            </h1>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message|safe }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <div class="card card-body p-4 shadow-lg bg-light border-0 mb-4">
+                <h2 class="text-danger mb-3 fw-bold">Pasos para el Pago</h2>
+                
+                <article class="mb-3 border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">1. Identificador Único</h5>
+                    <p class="text-muted mb-0">El sistema le ha asignado un **ID único de compra**. Utilícelo para referenciar su pago.</p>
+                </article>
+
+                <article class="border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">2. Adjuntar Comprobante</h5>
+                    <p class="text-muted mb-0">Debe adjuntar una imagen clara del comprobante para que su pago sea validado exitosamente.</p>
+                </article>
+            </div>
+
+            <form action="" method="POST" enctype="multipart/form-data" class="card card-body p-5 shadow-lg bg-white border-0" id="payment-form">
+                {% csrf_token %}
+
+                <div class="mb-4 text-center p-3 border rounded bg-warning bg-opacity-10">
+                    <p class="mb-1 text-muted fw-bold">Su ID Único de Compra:</p>
+                    <p class="h4 fw-bold text-danger">{{ id_compra }}</p>
+                    </div>
+
+                <div class="mb-4">
+                    <label for="id_compra" class="form-label fw-bold">Confirme su ID de compra</label>
+                    <input type="text" name="id_confirmacion" class="form-control" placeholder="Escriba su ID único" maxlength="100" required d="id_compra_confirmacion" value="{{ productos.id_compra|default:'' }}">
+                </div>
+
+                <div class="mb-4">
+                    <label for="input_imagen" class="form-label fw-bold">
+                        <i class="fa-solid fa-image me-1"></i> Imagen de Comprobante:
+                    </label>
+                    <input type="file" id="input_imagen" name="imagen_comprobante" class="form-control" accept="image/png, image/jpeg, image/jpg" required/>
+                    
+                    <img id="imagen_previa" src="#" alt="Previsualización del comprobante de pago">
+                </div>
+                
+                <button type="submit" class="btn btn-danger btn-lg w-100 mt-3" id="submit-button">
+                    <i class="fa-solid fa-circle-check me-2"></i> Validar Pago
+                </button>
+            </form>
+
+            <div id="spinner-container" class="card card-body p-5 shadow-lg bg-white border-0 text-center mt-3">
+                <h5 class="text-dark fw-bold mb-3">
+                    <i class="fa-solid fa-hourglass-start me-2 text-danger"></i> Validando Pago y Procesando Orden...
+                </h5>
+                <p class="text-muted">Por favor, espere. Esto puede tardar unos segundos.</p>
+                <div class="d-flex justify-content-center">
+                    <div class="dot-spinner">
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // Script para previsualización de imagen (déjalo donde está o inclúyelo aquí)
+    document.getElementById('input_imagen').addEventListener('change', function(event) {
+        const input = event.target;
+        const imagenPrevia = document.getElementById('imagen_previa');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                imagenPrevia.src = e.target.result;
+                imagenPrevia.style.display = 'block'; // Muestra la imagen
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            imagenPrevia.src = '#';
+            imagenPrevia.style.display = 'none'; // Oculta si no hay archivo
+        }
+    });
+
+    // 🎯 Nuevo Script para manejo de envío y Spinner
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('payment-form');
+        const submitButton = document.getElementById('submit-button');
+        const spinnerContainer = document.getElementById('spinner-container');
+
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                // 1. Deshabilitar el botón para evitar doble click
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Validando...';
+                
+                // 2. Ocultar el formulario
+                form.style.display = 'none';
+
+                // 3. Mostrar el spinner
+                spinnerContainer.style.display = 'block';
+
+                // El formulario se enviará de forma natural después de esto.
+                // Si la vista falla, Django recarga la página y el script se reinicia.
+            });
+        }
+        
+        // Función para restaurar el estado si la página se carga con mensajes de error
+        const messagesContainer = document.querySelector('.alert');
+        if (messagesContainer) {
+             // Si hay mensajes (y generalmente son de error al re-renderizar),
+             // aseguramos que el formulario esté visible y el spinner oculto.
+             form.style.display = 'block';
+             submitButton.disabled = false;
+             submitButton.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i> Validar Pago';
+             spinnerContainer.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

@@ -22,7 +22,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/"><i class="fa-solid fa-boxes-stacked me-2"></i>Django Manager Product</a>
+            <a class="navbar-brand" href="/"><img src="{% static 'img/Logo_Triven.svg' %}" alt="" width="50"></a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -31,8 +31,7 @@
                     <li class="nav-item">
                         <a href="/manager" class="nav-link active"><i class="fa-solid fa-house me-1"></i>Home</a>
                     </li>
-               
-                    {% if user.is_authenticated %}
+
                         <li class="nav-item">
                             <a href="/manager/products" class="nav-link"><i class="fa-solid fa-box-open me-1"></i>Productos por Enviar</a>
                         </li>
@@ -46,17 +45,16 @@
                         </li>
 
                         <li class="nav-item">
+                            <a href="/manager/pagos_verificados" class="nav-link btn btn-outline-success btn-sm ms-2"><i class="fa-solid fa-file-import"></i>Pagos verificar</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="/manager/pagos_verificados" class="nav-link btn btn-outline-success btn-sm ms-2"><i class="fa-solid fa-certificate"></i>Pagos aprovados</a>
+                        </li>
+
+                        <li class="nav-item">
                             <a href="/manager/logout" class="nav-link text-danger ms-lg-2"><i class="fa-solid fa-door-open me-1"></i>Cerrar Sesión</a>
                         </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a href="/manager/signup" class="nav-link"><i class="fa-solid fa-circle-plus me-1"></i>Registrarse</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="/manager/signin" class="nav-link btn btn-primary btn-sm ms-lg-2"><i class="fa-solid fa-user me-1"></i>Iniciar Sesión</a>
-                    </li>
-                    {% endif %}
                 </ul>
         </div>
     </div>

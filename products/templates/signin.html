@@ -5,7 +5,7 @@
     <div class="row">
         <section class="col-md-6 offset-md-3 col-lg-4 offset-lg-4">
             <form action="/signin/" method="POST" class="card card-body p-5 shadow-lg bg-white border-0">
-                <h1 class="text-center text-primary mb-4 fw-bold"><i class="fa-solid fa-right-to-bracket me-2"></i>Iniciar Sesión</h1>
+                <h1 class="text-center text-danger mb-4 fw-bold">Iniciar Sesión</h1>
                 
                 {% if error %}
                     <div class="alert alert-danger" role="alert">
@@ -22,10 +22,15 @@
 
                 <div class="mb-4">
                     <label for="id_password" class="form-label fw-bold">Contraseña:</label>
-                    <input type="password" name="password" class="form-control" placeholder="Escribe tu contraseña" required id="id_password">
+                    <div class="input-group">
+                        <input type="password" name="password" class="form-control" placeholder="Escribe tu contraseña" required id="id_password">
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('id_password', this)">
+                            <i class="fa-solid fa-eye" id="icon-id_password"></i>
+                        </button>
+                    </div>
                 </div>
 
-                <button class="btn btn-primary btn-lg">
+                <button class="btn btn-danger btn-lg">
                     <i class="fa-solid fa-user me-2"></i>Iniciar Sesión
                 </button>
                 <small class="text-center mt-3 text-muted">¿No tienes cuenta? <a href="/signup/" class="text-primary fw-bold">Regístrate aquí</a></small>
@@ -34,4 +39,21 @@
         </section>
     </div>
 </main>
+
+<script>
+    function togglePasswordVisibility(fieldId, buttonElement) {
+        const passwordField = document.getElementById(fieldId);
+        const iconElement = buttonElement.querySelector('i');
+
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            iconElement.classList.remove('fa-eye');
+            iconElement.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            iconElement.classList.remove('fa-eye-slash');
+            iconElement.classList.add('fa-eye');
+        }
+    }
+</script>
 {% endblock %}

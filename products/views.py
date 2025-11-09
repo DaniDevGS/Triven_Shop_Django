@@ -5,12 +5,22 @@ from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 from .forms import ProductForm
 from .serializers import ItemSerializer
-from .models import Producto, CATEGORIA_CHOICES, Carrito, ItemCarrito # <--- IMPORTANTE: Importar Carrito e ItemCarrito
+from .models import Producto, CATEGORIA_CHOICES, Carrito, ItemCarrito, OrdenDeCompra, ItemOrden # <--- IMPORTANTE: Importar Carrito e ItemCarrito
 from django.contrib import messages
 from.conversion import get_exchange_rate
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal
+import uuid # Para generar el ID único
+from io import BytesIO # Para manejar el PDF en memoria
+from django.core.files.base import ContentFile # Para guardar archivos
+from django.db import transaction # Para asegurar la integridad de la reducción de stock
+import urllib.parse # Para codificar el mensaje de WhatsApp
+
+# Importaciones para ReportLab (Generación de PDF)
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
 # Create your views here.
 # Create your views here.
 
@@ -96,6 +106,17 @@ def delete_product(request, products_id:int):
         producto.delete()
         return redirect('products')
 
+# ===============================================================================================================
+# =================================== Productos verificados y por verificar ==============================
+# ===============================================================================================================
+
+def pagos_verificar(request):
+    # ...
+    return render(request, 'manager/pagos_verificar.html')
+
+
+def pagos_aprovados(request):
+    return render(request,'manager/pagos_verificados.html')
 # ========================================================================================================================================
 
 
@@ -186,45 +207,63 @@ def products_store(request):
 # ===============================================================================================================
 
 @login_required
+@login_required
 def add_to_cart(request):
-    """Agrega un producto al carrito (sesión). Soporta adición de cantidad."""
+    """Agrega un producto al carrito (sesión). Soporta adición de cantidad, restringida por stock."""
     if request.method == 'POST':
         producto_id = request.POST.get('producto_id')
         try:
-            cantidad = int(request.POST.get('cantidad', 1)) # Obtener cantidad, por defecto 1
-            if cantidad < 1:
-                cantidad = 1
+            # Cantidad que el usuario intenta agregar
+            cantidad_a_agregar = int(request.POST.get('cantidad', 1)) 
+            if cantidad_a_agregar < 1:
+                cantidad_a_agregar = 1
         except ValueError:
-            cantidad = 1
+            cantidad_a_agregar = 1
 
         producto = get_object_or_404(Producto, pk=producto_id, datecompleted__isnull=False)
         
-        # Inicializa el carrito si no existe en la sesión
+        # Obtener el carrito de la sesión
         cart = request.session.get('cart', {})
+        producto_id_str = str(producto_id)
         
-        # Usa el ID del producto como clave.
-        if producto_id in cart:
-            # Si ya existe, actualiza la cantidad (sumando la nueva cantidad)
-            # Esto puede ser una simple suma o reemplazar, dependiendo de si el formulario permite elegir una nueva.
-            # Aquí, lo sumamos para la tienda, o lo establecemos si viene de un lugar que define la cantidad total.
+        # Stock disponible (Asumimos que el modelo tiene el campo 'stock')
+        stock_disponible = producto.cantidad
+
+        cantidad_actual_en_carrito = cart.get(producto_id_str, {}).get('cantidad', 0)
+        nueva_cantidad_total = cantidad_actual_en_carrito + cantidad_a_agregar
+
+        # Validar si la nueva cantidad total excede el stock
+        if nueva_cantidad_total > stock_disponible:
+            # La cantidad a agregar se ajusta al máximo permitido
+            cantidad_permitida = stock_disponible - cantidad_actual_en_carrito
             
-            # NOTA: Para la tienda, la mejor práctica es AÑADIR. 
-            # Para la página de detalle/carrito, se puede REEMPLAZAR.
-            # Para simplicidad, aquí lo SUMAMOS:
-            cart[producto_id]['cantidad'] += cantidad
+            if cantidad_permitida > 0:
+                # Agrega solo lo que falta para llegar al límite del stock
+                cart[producto_id_str]['cantidad'] = stock_disponible
+                messages.warning(request, f"Solo se han añadido {cantidad_permitida} unidades de {producto.title}. El stock máximo es de {stock_disponible}.")
+            else:
+                # Si la cantidad actual ya es mayor o igual al stock, no se añade nada
+                messages.error(request, f"No puedes añadir más unidades de {producto.title}. Ya tienes el stock máximo ({stock_disponible}) en tu carrito.")
+                return redirect('tienda') # Permite que el usuario vea el mensaje en la tienda
         else:
-            # Si no existe, lo agrega.
-            cart[producto_id] = {
-                'id': producto.id, # type: ignore
-                'title': producto.title,
-                'price': float(producto.price), # Guardar como float o str para serialización en sesión
-                'imagen_url': producto.imagen.url,
-                'cantidad': cantidad
-            }
+            # Actualiza o añade el producto
+            if producto_id_str in cart:
+                cart[producto_id_str]['cantidad'] += cantidad_a_agregar
+            else:
+                cart[producto_id_str] = {
+                    'id': producto.id,  # type: ignore
+                    'title': producto.title,
+                    'price': float(producto.price),
+                    'imagen_url': producto.imagen.url,
+                    'cantidad': cantidad_a_agregar,
+                    # IMPORTANTE: Almacenar el stock para validaciones futuras en el carrito
+                    'stock': stock_disponible, 
+                }
+            messages.success(request, f"{cantidad_a_agregar} unidades de {producto.title} añadidas al carrito.")
 
         request.session['cart'] = cart
         request.session.modified = True
-        return redirect('carrito') # Redirige al carrito después de agregar
+        return redirect('carrito') 
     return redirect('tienda')
 
 @login_required
@@ -244,23 +283,37 @@ def remove_from_cart(request, producto_id):
 
 @login_required
 def update_cart_quantity(request, producto_id):
-    """Actualiza la cantidad de un producto específico en el carrito."""
+    """Actualiza la cantidad de un producto específico en el carrito, restringida por stock."""
     if request.method == 'POST':
         producto_id_str = str(producto_id)
         try:
-            # Asegúrate de que la cantidad es válida
             new_quantity = int(request.POST.get('cantidad'))
-            if new_quantity < 1:
-                new_quantity = 1
         except (TypeError, ValueError):
-            return redirect('carrito') # O muestra un error
+            messages.error(request, "Cantidad inválida.")
+            return redirect('carrito')
+
+        if new_quantity < 1:
+            new_quantity = 1 # Mínimo 1
 
         cart = request.session.get('cart', {})
         
         if producto_id_str in cart:
-            cart[producto_id_str]['cantidad'] = new_quantity
-            request.session['cart'] = cart
-            request.session.modified = True
+            producto = get_object_or_404(Producto, pk=producto_id, datecompleted__isnull=False)
+            stock_disponible = producto.cantidad # Obtener el stock real de la DB
+
+            if new_quantity > stock_disponible:
+                # Si la cantidad nueva excede el stock, se ajusta al máximo (stock)
+                messages.error(request, f"La cantidad máxima para {producto.title} es {stock_disponible}. Cantidad ajustada.")
+                new_quantity = stock_disponible
+                
+            if new_quantity > 0:
+                cart[producto_id_str]['cantidad'] = new_quantity
+                # Opcional: actualizar el stock también si hubo una actualización en la tienda
+                cart[producto_id_str]['stock'] = stock_disponible 
+                request.session['cart'] = cart
+                request.session.modified = True
+        else:
+             messages.error(request, "Producto no encontrado en el carrito.")
 
     return redirect('carrito')
 
@@ -275,7 +328,7 @@ def clear_cart(request):
 
 
 def carrito(request):
-    """Muestra el contenido del carrito, incluyendo la conversión a Bolívares."""
+    """Muestra el contenido del carrito, incluyendo la conversión a Bolívares y el stock disponible."""
     cart = request.session.get('cart', {})
     items = []
     subtotal_usd = Decimal(0.00)
@@ -285,25 +338,46 @@ def carrito(request):
     if bolivar_rate_float is not None:
         bolivar_rate = Decimal(str(bolivar_rate_float))
     else:
-        bolivar_rate = None # O usar un valor por defecto si la API falla (ej: Decimal(0.00))
+        bolivar_rate = None
 
-    # Recalcular el subtotal y preparar los datos para la plantilla
+    # Obtener IDs de productos para una consulta eficiente
+    producto_ids = [int(id_str) for id_str in cart.keys()]
+    
+    # Obtener productos y su stock de la base de datos en una sola consulta
+    productos_db = Producto.objects.filter(id__in=producto_ids).values('id', 'cantidad', 'title') 
+    stock_map = {item['id']: item['cantidad'] for item in productos_db}
+
+
     for producto_id_str, data in cart.items():
+        producto_id = int(producto_id_str)
+        stock_disponible = stock_map.get(producto_id, 0) # 0 si no se encuentra (producto eliminado/inactivo)
+        
         cantidad = data.get('cantidad', 1)
         price_usd = Decimal(str(data.get('price', 0.00)))
         total_item_usd = price_usd * cantidad
         subtotal_usd += total_item_usd
-        
-        # Lógica de conversión a Bolívares
         price_ves = None
         total_item_ves = None
 
         if bolivar_rate:
             price_ves = price_usd * bolivar_rate
             total_item_ves = total_item_usd * bolivar_rate
+            
+        # IMPORTANTE: Revisar si la cantidad actual supera el stock (por si el stock cambió después de añadirlo)
+        if cantidad > stock_disponible:
+             # Opcional: Ajustar la cantidad en el carrito automáticamente
+             data['cantidad'] = stock_disponible
+             request.session.modified = True
+             cantidad = stock_disponible # Usar la cantidad ajustada
+             messages.warning(request, f"La cantidad de **{data.get('title')}** se ajustó a su stock máximo de {stock_disponible}.")
+             
+        # Si el stock es 0, no mostrarlo o mostrarlo como no disponible (aquí se mantendrá el item)
+        if stock_disponible == 0:
+            messages.error(request, f"**{data.get('title')}** no está disponible temporalmente. Por favor, elimínalo.")
+
 
         items.append({
-            'producto_id': int(producto_id_str),
+            'producto_id': producto_id,
             'title': data.get('title'),
             'price_usd': price_usd,
             'price_ves': price_ves,
@@ -311,9 +385,9 @@ def carrito(request):
             'imagen_url': data.get('imagen_url'),
             'total_item_usd': total_item_usd,
             'total_item_ves': total_item_ves,
+            'max_stock': stock_disponible, # <--- ¡NUEVO! Stock máximo para el template
         })
 
-    # Calcular subtotal total en Bolívares
     subtotal_ves = subtotal_usd * bolivar_rate if bolivar_rate else None
     
     context = {
@@ -323,6 +397,141 @@ def carrito(request):
         'bolivar_rate': bolivar_rate,
     }
     return render(request, 'carrito.html', context)
+
+# ===============================================================================================================
+# =================================== Lógica de Pago/Compra (Con ID Único y Stock) ==============================
+# ===============================================================================================================
+@login_required
+def compra_productos(request):
+    """Maneja el formulario de pago, genera el ID único, registra la orden y reduce el stock."""
+    cart = request.session.get('cart', {})
+    
+    if not cart:
+        messages.error(request, "Tu carrito está vacío. No puedes proceder al pago.")
+        return redirect('carrito')
+
+    # --- Generación del ID Único (GET/POST) ---
+    # Usar un ID de 8 caracteres alfanumérico. 
+    if 'id_compra' not in request.session:
+        # Generar un UUID, tomar los primeros 8 caracteres y hacerlo mayúsculas.
+        unique_id = uuid.uuid4().hex[:8].upper()
+        request.session['id_compra'] = unique_id
+    
+    id_compra_actual = request.session['id_compra']
+
+    # --- LÓGICA POST: Procesar el pago y comprobante ---
+    if request.method == 'POST':
+        id_confirmacion = request.POST.get('id_confirmacion')
+        imagen_comprobante = request.FILES.get('imagen_comprobante')
+
+        if str(id_confirmacion).strip() != id_compra_actual:
+            messages.error(request, "El ID de compra confirmado no coincide con el asignado. Inténtalo de nuevo.")
+            return redirect('compra_productos')
+        
+        if not imagen_comprobante:
+            messages.error(request, "Debe adjuntar la imagen del comprobante de pago.")
+            return redirect('compra_productos')
+            
+        try:
+            total_orden_usd = Decimal(0.00)
+            items_detalle = []
+            
+            # Usar una transacción atómica para asegurar que la orden se crea
+            # y el stock se reduce, o se revierte todo.
+            with transaction.atomic():
+                
+                # 1. Crear la Orden de Compra Inicial
+                orden = OrdenDeCompra.objects.create(
+                    user=request.user,
+                    id_compra=id_compra_actual,
+                    subtotal_usd=Decimal(0.00), 
+                    estado='PENDIENTE' 
+                )
+
+                # 2. Recorrer el carrito, reducir stock y crear ItemOrden
+                for producto_id_str, data in cart.items():
+                    producto_id = int(producto_id_str)
+                    cantidad_comprada = data.get('cantidad', 1)
+                    precio_unidad = Decimal(str(data.get('price', 0.00)))
+                    
+                    producto = get_object_or_404(Producto, pk=producto_id)
+                    
+                    # Validación Final de Stock
+                    if producto.cantidad < cantidad_comprada:
+                        raise Exception(f"Stock insuficiente para **{producto.title}**. Solo quedan {producto.cantidad}.")
+
+                    # **REDUCCIÓN DE STOCK**
+                    producto.cantidad -= cantidad_comprada
+                    producto.save()
+
+                    # Crear el Item de la Orden
+                    ItemOrden.objects.create( 
+                        orden=orden,
+                        producto=producto,
+                        cantidad=cantidad_comprada,
+                        precio_unidad=precio_unidad
+                    )
+                    
+                    total_item_usd = precio_unidad * cantidad_comprada
+                    total_orden_usd += total_item_usd
+                    
+                    items_detalle.append({
+                        'title': producto.title,
+                        'cantidad': cantidad_comprada,
+                        'precio_unidad': precio_unidad
+                    })
+
+                # 3. Guardar Comprobante y Total en la Orden
+                orden.subtotal_usd = total_orden_usd
+                orden.imagen_comprobante.save(
+                    f'comprobante_{id_compra_actual}.{imagen_comprobante.name.split(".")[-1]}', 
+                    imagen_comprobante
+                )
+                orden.save()
+
+            # 4. Generar Enlace de WhatsApp con datos de la factura
+            # **IMPORTANTE**: No es posible adjuntar archivos (como el PDF) directamente 
+            # a través del enlace estándar de WhatsApp API/Web. Solo se puede enviar texto.
+            
+            # Número de teléfono de destino (Ejemplo: +584120000000)
+            whatsapp_number = "584121834638" 
+            
+            message = (
+                f"¡Nueva Orden de Compra (Validación)!\n"
+                f"ID de Compra: *{id_compra_actual}*\n"
+                f"Cliente: {request.user.username}\n"
+                f"Total Pagado: ${total_orden_usd:.2f}\n"
+                f"Productos:\n"
+            )
+            for item in items_detalle:
+                message += f"  - {item['title']} x{item['cantidad']} (${(item['precio_unidad'] * item['cantidad']):.2f})\n"
+            
+            message += "\n*Adjunté el capture del pago a esta conversación.*"
+            
+            encoded_message = urllib.parse.quote(message)
+            whatsapp_url = f"https://wa.me/{whatsapp_number}?text={encoded_message}"
+            
+            # 5. Limpiar sesión y mostrar éxito
+            # Si la transacción fue exitosa, borramos el carrito y el ID de sesión
+            del request.session['cart']
+            del request.session['id_compra']
+            request.session.modified = True
+            
+            messages.success(request, f"¡Pago registrado! ID: **{id_compra_actual}**. Serás redirigido para enviar el comprobante por WhatsApp.")
+            
+            return redirect(whatsapp_url)
+
+        except Exception as e:
+            messages.error(request, f"Ocurrió un error: {str(e)}. La compra no se ha completado y el stock no se redujo.")
+            # Si falla, el carrito y el ID de compra siguen en la sesión
+            return redirect('compra_productos')
+
+
+    # --- LÓGICA GET: Mostrar el formulario con el ID generado ---
+    context = {
+        'id_compra': id_compra_actual,
+    }
+    return render(request, 'pago.html', context)
 
 #=================================================================================================================================
 
@@ -360,91 +569,64 @@ def products_items(request, products_id:int):
     return render(request, 'products_items.html', {'producto': producto, 'bolivar_rate': bolivar_rate})
 
 def signup(request):
-    """Gestiona el registro de nuevos usuarios.
-
-    Si es una solicitud GET, muestra el formulario de registro.
-    Si es una solicitud POST, intenta crear un nuevo usuario y, si tiene éxito,
-    inicia la sesión del usuario y lo redirige a la lista de tareas.
-    Maneja errores si las contraseñas no coinciden o si el nombre de usuario
-    ya existe.
-
-    Args:
-        request: El objeto HttpRequest entrante.
-
-    Returns:
-        Un objeto HttpResponse que:
-        - Renderiza 'signup.html' con el formulario (GET).
-        - Redirige a 'tienda' (POST exitoso).
-        - Renderiza 'signup.html' con el formulario y un mensaje de error (POST fallido).
-    """
+    """Gestiona el registro de nuevos usuarios con validaciones extendidas."""
     if request.method == 'GET':
-        # Nota: Estamos usando UserCreationForm, pero si queremos un campo de email requerido
-        # debemos crear un formulario personalizado (ProductUserCreationForm).
-        # Para simplificar y usar solo el campo email *adicional*, modificaremos el POST.
-        # Sin embargo, lo ideal es crear un formulario personalizado para validación.
         return render(request, 'signup.html', {
-            'form': UserCreationForm # Podrías cambiar esto a un formulario personalizado si requieres validación estricta de email
+            'form': UserCreationForm
         })
     else:
-        # **CAMBIO CLAVE AQUÍ**
-        # 1. Obtener el email del POST.
-        # 2. Pasarlo a User.objects.create_user.
-        if request.POST['password1'] == request.POST['password2']:
-            try:
-                # El campo 'email' está disponible en el request.POST ya que lo añadiremos en el HTML
-                user = User.objects.create_user(
-                    username=request.POST['username'],
-                    email=request.POST['email'],  # <--- AÑADIDO: El campo email
-                    password=request.POST['password1']
-                )
-                user.save()
-                login(request, user)
-                return redirect('tienda')
-            
-            except IntegrityError:
-                # La integridad puede fallar por username duplicado (y ahora por email duplicado si lo haces unique)
-                return render(request, 'signup.html', {
-                    'form': UserCreationForm, # El formulario que se renderizará en caso de error
-                    'error': "User alredy exists or email is already registered"
-                })
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password_1 = request.POST.get('password1')
+        password_2 = request.POST.get('password2')
+        
+        # 1. Chequeo de que las contraseñas coincidan
+        if password_1 != password_2:
+            return render(request, 'signup.html', {
+                'form': UserCreationForm,
+                'error': "Error: Las contraseñas no coinciden."
+            })
 
-        return render(request, 'signup.html', {
-            'form': UserCreationForm, # El formulario que se renderizará en caso de error
-            'error': "Password do not match"
-        })
+        # 2. Chequeo de que la contraseña no sea la misma que el username (Buena Práctica)
+        if password_1 == username:
+            return render(request, 'signup.html', {
+                'form': UserCreationForm,
+                'error': "Error: La contraseña no puede ser igual al nombre de usuario."
+            })
+
+        # 3. Chequeo de unicidad de Email
+        # Django no garantiza email unique por defecto, lo comprobamos manualmente
+        if email and User.objects.filter(email=email).exists():
+            return render(request, 'signup.html', {
+                'form': UserCreationForm,
+                'error': "Error: El correo electrónico ya está registrado."
+            })
+            
+        # 4. Creación del usuario
+        try:
+            # user.save() es implícito en create_user si se usa Manager
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password_1
+            )
+            login(request, user)
+            return redirect('tienda')
+            
+        except IntegrityError:
+            # Esto atrapará el error de un nombre de usuario duplicado
+            return render(request, 'signup.html', {
+                'form': UserCreationForm,
+                'error': "Error: El nombre de usuario ya está registrado."
+            })
     
 @login_required
 def signout(request):
-    """Cierra la sesión del usuario actual y redirige a la página de inicio.
-
-    Args:
-        request: El objeto HttpRequest entrante.
-
-    Returns:
-        Un objeto HttpResponse que redirige a 'home'.
-    """
     logout(request)
     return redirect('index')
 
 
 def signin(request):
-    """Gestiona el inicio de sesión del usuario.
-
-    Si es una solicitud GET, muestra el formulario de autenticación.
-    Si es una solicitud POST, intenta autenticar al usuario. Si tiene éxito,
-    inicia la sesión del usuario y lo redirige a la lista de tareas. Si falla,
-    muestra un mensaje de error.
-
-    Args:
-        request: El objeto HttpRequest entrante.
-
-    Returns:
-        Un objeto HttpResponse que:
-        - Renderiza 'signin.html' con el formulario (GET).
-        - Redirige a 'products' (POST exitoso).
-        - Renderiza 'signin.html' con el formulario y un mensaje de error (POST fallido).
-    """
-
     if request.method == 'GET':
         return render(request, 'signin.html', {
         'form': AuthenticationForm

@@ -1,0 +1,47 @@
+{% extends 'manager/base.html' %}
+
+{% block content %}
+<main class="container py-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            {% if sent_view %}
+            <h1 class="text-center display-4 fw-bold text-success mb-5"><i class="fa-solid fa-circle-check me-2"></i>Pagos aprovados</h1>
+            {% else %}
+            <h1 class="text-center display-4 fw-bold text-primary mb-5"><i class="fa-solid fa-clipboard-list me-2"></i>Pagos verificar</h1>
+            {% endif %}
+
+            <div class="row g-4">
+                {% for producto in productos %}
+                    <div class="col-12">
+                        <div class="card shadow-sm {% if sent_view %}border-success{% else %}border-warning{% endif %}">
+                            <a class="text-decoration-none text-dark" href=" {% url 'products_detail' producto.id %} ">
+                                <div class="card-body">
+                                    <header class="d-flex justify-content-between align-items-center mb-3">
+                                        <h2 class="card-title fw-bold text-truncate text-primary">{{ id_compra_actual }}</h2>
+                                        <span class="badge bg-secondary-subtle text-secondary py-2 px-3">
+                                            <i class="fa-solid fa-user me-1"></i>{{ request.user.username }}
+                                        </span>
+                                    </header>
+
+                                    <p class="card-text text-muted mb-2">{{ producto.description|truncatechars:100 }}</p>
+
+                                    <div class="d-flex justify-content-between align-items-end">
+                                        <small class="text-info fw-bold">
+                                            <i class="fa-regular fa-calendar-alt me-1"></i>{{ producto.datecompleted|date:'M j, Y' }}
+                                            <span class="text-muted">a las {{ producto.datecompleted|date:'H:i' }}</span>
+                                        </small>
+                                        
+                                        {% if producto.imagen %}
+                                            <img src="{{ producto.imagen.url }}" alt="{{ producto.title }}" class="img-thumbnail rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

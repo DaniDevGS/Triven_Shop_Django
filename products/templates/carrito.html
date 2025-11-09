@@ -29,6 +29,7 @@
                                             class="form-control form-control-sm me-3"
                                             value="{{ item.cantidad }}"
                                             min="1"
+                                            max="{{ item.max_stock }}"
                                             style="width: 70px;"
                                             onchange="this.form.submit()">
                                         </form>
@@ -98,9 +99,9 @@
                             </ul>
                             
                             <div class="d-grid gap-2">
-                                <button class="btn btn-warning btn-lg fw-bold">
+                                <a class="btn btn-warning btn-lg fw-bold" href="{% url 'compra_productos' %}" role="button">
                                     Proceder al Pago
-                                </button>
+                                </a>
                                 <p class="text-center mt-2 text-muted"><small>Impuestos y cargos de importación se calcularán en el checkout.</small></p>
                             </div>
                         </div>
@@ -111,22 +112,22 @@
             {% else %}
             <!-- ============================================================================ELSE================================================================ -->
             <div class="row justify-content-center my-5">
-        <div class="col-12 col-md-8 col-lg-6 text-center py-5 px-4 bg-white border border-2 rounded-3xl shadow-lg" style="border-style: dashed; border-color: #ced4da;">
-            <!-- Icono grande y llamativo -->
-            <i class="fa-solid fa-bag-shopping fa-6x text-muted mb-4" style="opacity: 0.7;"></i>
+                <div class="col-12 col-md-8 col-lg-6 text-center py-5 px-4 bg-white border border-2 rounded-3xl shadow-lg" style="border-style: dashed; border-color: #ced4da;">
+                    <!-- Icono grande y llamativo -->
+                    <i class="fa-solid fa-bag-shopping fa-6x text-muted mb-4" style="opacity: 0.7;"></i>
             
-            <h2 class="fw-bolder mb-3 text-dark">¡Tu Carrito Está Vacío!</h2>
+                    <h2 class="fw-bolder mb-3 text-dark">¡Tu Carrito Está Vacío!</h2>
             
-            <p class="lead mb-4 text-secondary">
-                Parece que aún no has agregado productos. Explora nuestras fantásticas ofertas y encuentra algo increíble para llenar este espacio.
-            </p>
+                    <p class="lead mb-4 text-secondary">
+                        Parece que aún no has agregado productos. Explora nuestras fantásticas ofertas y encuentra algo increíble para llenar este espacio.
+                    </p>
             
-            <!-- Botón de Llamada a la Acción (Asumo que /products/ es la URL de tu tienda) -->
-            <a href="{% url 'tienda' %}" class="btn btn-primary btn-lg fw-bold shadow-sm">
-                <i class="fa-solid fa-shop me-1"></i> Empezar a Comprar
-            </a>
-        </div>
-    </div>
+                    <!-- Botón de Llamada a la Acción (Asumo que /products/ es la URL de tu tienda) -->
+                    <a href="{% url 'tienda' %}" class="btn btn-primary btn-lg fw-bold shadow-sm">
+                        <i class="fa-solid fa-shop me-1"></i> Empezar a Comprar
+                    </a>
+                </div>
+            </div>
 
 
             {% endif %}

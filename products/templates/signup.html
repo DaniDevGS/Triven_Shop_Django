@@ -6,7 +6,7 @@
         <div class="col-md-6 offset-md-3 col-lg-4 offset-lg-4">
             <form method="POST" class="card card-body p-5 shadow-lg bg-white border-0">
 
-                <h1 class="text-center text-info mb-4 fw-bold"><i class="fa-solid fa-circle-plus me-2"></i>Registrarse</h1>
+                <h1 class="text-center text-danger mb-4 fw-bold">Registrarse</h1>
                 
                 {% if error %}
                     <div class="alert alert-danger" role="alert">
@@ -28,21 +28,50 @@
 
                 <div class="mb-3">
                     <label for="id_password1" class="form-label fw-bold">Contraseña:</label>
-                    <input type="password" name="password1" class="form-control" placeholder="Escribe tu contraseña" required id="id_password1">
+                    <div class="input-group">
+                        <input type="password" name="password1" class="form-control" placeholder="Escribe tu contraseña" required id="id_password1">
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('id_password1', this)">
+                            <i class="fa-solid fa-eye" id="icon-id_password1"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="mb-4">
                     <label for="id_password2" class="form-label fw-bold">Confirmar Contraseña:</label>
-                    <input type="password" name="password2" class="form-control" placeholder="Confirma tu contraseña" required id="id_password2">
+                    <div class="input-group">
+                        <input type="password" name="password2" class="form-control" placeholder="Confirma tu contraseña" required id="id_password2">
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('id_password2', this)">
+                            <i class="fa-solid fa-eye" id="icon-id_password2"></i>
+                        </button>
+
+                    </div>
                 </div>
                 
-                <button class="btn btn-info btn-lg">
-                    <i class="fa-solid fa-paper-plane me-2"></i>Registrarse
+                <button class="btn btn-warning btn-lg">
+                    <i class="fa-solid fa-paper-plane me-2 text-danger"></i>Registrarse
                 </button>
-                <small class="text-center mt-3 text-muted">¿Ya tienes cuenta? <a href="{% url 'signin' %}" class="text-info fw-bold">Inicia sesión aquí</a></small>
+                <small class="text-center mt-3 text-muted">¿Ya tienes cuenta? <a href="{% url 'signin' %}" class="text-text-primary fw-bold">Inicia sesión aquí</a></small>
 
             </form>
         </div>
     </div>
 </main>
+
+<script>
+    function togglePasswordVisibility(fieldId, buttonElement) {
+        const passwordField = document.getElementById(fieldId);
+        const iconElement = buttonElement.querySelector('i');
+
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            iconElement.classList.remove('fa-eye');
+            iconElement.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            iconElement.classList.remove('fa-eye-slash');
+            iconElement.classList.add('fa-eye');
+        }
+    }
+</script>
+
 {% endblock %}

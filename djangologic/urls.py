@@ -34,6 +34,7 @@ urlpatterns = [
     path('carrito/remove/<int:producto_id>/', views.remove_from_cart, name='remove_from_cart'),
     path('carrito/update/<int:producto_id>/', views.update_cart_quantity, name='update_cart_quantity'),
     path('carrito/clear/', views.clear_cart, name='clear_cart'), # Opcional: si creas una vista para vaciar todo
+    path('compra', views.compra_productos, name='compra_productos'),
     path('user_detail', views.user_details, name='user_detail'),
     path('tienda/<int:products_id>/', views.products_items, name='products_items'),
 
@@ -46,8 +47,11 @@ urlpatterns = [
     # urls.py
     path('manager/products/<int:products_id>/complete', views.sent_product, name='complete_products'), # type: ignore
     path('manager/products/<int:products_id>/delete', views.delete_product, name='delete_products'), # <-- Asegúrate de la coma # type: ignore
-
+    #=================================VIEWS DE PRODUCTS Manager======================================================
+    path('manager/pagos_verificados', views.pagos_verificar, name='pagos_verificados')
     
+    # {% url 'pagos_verificados' %}
+
 ]
 
 if settings.DEBUG:

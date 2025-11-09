@@ -2,17 +2,83 @@
 {% load static %}
 
 {% block content %}
-        <main>
-            
-            <section id="seccion-username">
-                <h1>Panel detalles de usuario</h1>
-                <p>Bienvenido al panel de usuario</p>
-                <h2>{{ username }}</h2>
-                <article></article>
-                <a href="logout/" class="nav-link text-danger ms-lg-2"><i class="fa-solid fa-door-open me-1"></i>Cerrar Sesión</a>
-            </section>
+<main class="container py-5">
+    <h1>Panel detalles de usuario</h1>
+    <p>Bienvenido al panel de usuario</p>
+    <section class="col-md-8 offset-md-2" id="Hero card">
+        <h2>{{ username }}</h2>
+        <a href="logout/" class="nav-link text-danger ms-lg-2"><i class="fa-solid fa-door-open me-1"></i>Cerrar Sesión</a>
+        <nav>
+            <ul>
+                <li></li>
+            </ul>
+        </nav>
+    </section>
 
-        </main>
+    <!--=============================PRODUCTOS POR VERIFICAR================================================-->
+    <section>
+        <h2>Productos por verificar</h2>
+
+        <article class="col-12">
+            <div class="card card shadow-sm">
+                <a class="text-decoration-none text-dark" href="">
+                    <div class="card-body">
+                        <header class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="card-title fw-bold text-truncate text-primary"></h2>
+                            <span class="badge bg-secondary-subtle text-secondary py-2 px-3">
+                                <i class="fa-solid fa-user me-1"></i>
+                            </span>
+                        </header>
+
+                        <p class="card-text text-muted mb-2"></p>
+
+                        <div class="d-flex justify-content-between align-items-end">
+                            <small class="text-info fw-bold">
+                                <i class="fa-regular fa-calendar-alt me-1"></i>
+                                <span class="text-muted"></span>
+                            </small>
+
+                                <img src="" alt="" class="img-thumbnail rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+        </article>
+    </section>
+
+    <!--=============================APROVADOS================================================-->
+    <section>
+        <h2>Productos Aprovados</h2>
+
+        <article class="col-12">
+            <div class="card card shadow-sm">
+                <a class="text-decoration-none text-dark" href="">
+                    <div class="card-body">
+                        <header class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="card-title fw-bold text-truncate text-primary"></h2>
+                            <span class="badge bg-secondary-subtle text-secondary py-2 px-3">
+                                <i class="fa-solid fa-user me-1"></i>
+                            </span>
+                        </header>
+
+                        <p class="card-text text-muted mb-2"></p>
+
+                        <div class="d-flex justify-content-between align-items-end">
+                            <small class="text-info fw-bold">
+                                <i class="fa-regular fa-calendar-alt me-1"></i>
+                                <span class="text-muted"></span>
+                            </small>
+
+                                <img src="" alt="" class="img-thumbnail rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+        </article>
+    </section>
+</main>
 
 
 <!-- =======================================================FOOTER DE CONTACTOS========================================================================== -->

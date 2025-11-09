@@ -30,6 +30,43 @@ class Producto(models.Model):
     def __str__(self):
         return self.title + '- by ' + self.user.username
 
+
+# ================================ NUEVOS MODELOS PARA LA ORDEN DE COMPRA ================================
+
+class OrdenDeCompra(models.Model):
+    ESTADO_CHOICES = (
+        ('PENDIENTE', 'Pendiente de Revisión'),
+        ('APROBADA', 'Aprobada'),
+        ('RECHAZADA', 'Rechazada'),
+    )
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # ID único y aleatorio para referenciar el pago
+    id_compra = models.CharField(max_length=100, unique=True) 
+    fecha_orden = models.DateTimeField(auto_now_add=True)
+    subtotal_usd = models.DecimalField(max_digits=10, decimal_places=2)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
+    # Campo para el comprobante (capture de pago móvil)
+    imagen_comprobante = models.ImageField(upload_to='comprobantes/', null=True, blank=True)
+    
+    def __str__(self):
+        return f"Orden {self.id_compra} de {self.user.username}"
+
+
+class ItemOrden(models.Model):
+    orden = models.ForeignKey(OrdenDeCompra, on_delete=models.CASCADE, related_name='items_orden')
+    # Usar on_delete=models.PROTECT para que no se borre el producto si está en una orden
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT) 
+    cantidad = models.PositiveIntegerField(default=1)
+    precio_unidad = models.DecimalField(max_digits=6, decimal_places=2) # Precio al momento de la compra
+    
+    def total_item(self):
+        return self.precio_unidad * self.cantidad
+
+    def __str__(self):
+        return f"{self.cantidad} x {self.producto.title} en Orden {self.orden.id_compra}"
+
+
 # ================================ NUEVOS MODELOS PARA EL CARRITO ================================
 
 class Carrito(models.Model):

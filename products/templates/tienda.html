@@ -60,18 +60,36 @@
                     </div>
 
                     <div class="col-lg-9">
+
+                        <div class="mb-4">
+                            <form method="GET" action="{% url 'tienda' %}" class="input-group input-group-lg shadow-sm border border-danger rounded-pill overflow-hidden">
+                                
+                                {% if current_category %}
+                                    <input type="hidden" name="category" value="{{ current_category }}">
+                                {% endif %}
+                                {% if min_price %}
+                                    <input type="hidden" name="min_price" value="{{ min_price }}">
+                                {% endif %}
+                                {% if max_price %}
+                                    <input type="hidden" name="max_price" value="{{ max_price }}">
+                                {% endif %}
+
+                                <input type="text" 
+                                    name="q" 
+                                    class="form-control border-0 p-3 text-dark fw-bold" 
+                                    placeholder="Busca productos"
+                                    aria-label="Término de búsqueda"
+                                    value="{{ search_query|default:'' }}">
+                                
+                                <button class="btn btn-danger px-4" type="submit" id="button-addon2">
+                                    <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar
+                                </button>
+                            </form>
+                        </div>
                         
                         <!-- =========================================================MOSTRAR PRODUCTOS=========================================================== -->
                         <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border border-info">
-                            <p class="mb-0 text-muted small">Mostrando {{ cantidad }} ** productos disponibles</p>
-                            <!-- <div class="d-flex align-items-center">
-                                <label for="sort-by" class="form-label me-2 mb-0 d-none d-md-block small fw-bold">Ordenar por:</label>
-                                <select class="form-select form-select-sm" id="sort-by" style="width: auto;">
-                                    <option selected>Más Relevante</option>
-                                    <option value="1">Precio: Menor a Mayor</option>
-                                    <option value="2">Precio: Mayor a Menor</option>
-                                </select>
-                            </div> -->
+                            <p class="mb-0 text-muted small">Mostrando {{ cantidad }} productos disponibles</p>
                         </div>
                         <!-- ======================================================================================================================================= -->
 
@@ -92,26 +110,26 @@
                                                 
                                                 <span class="fs-4 fw-bold text-warning price-bolivar">({{ producto.price_ves|floatformat:2 }}Bs)</span>
                                             </div>
-                                            <form method="POST" action="{% url 'add_to_cart' %}" class="mt-3">
+                                            <!-- <form method="POST" action="{% url 'add_to_cart' %}" class="mt-3">
                                                 {% csrf_token %}
                                                 <input type="hidden" name="producto_id" value="{{ producto.id }}">
                                                 
                                                 <div class="input-group input-group-sm mb-2">
                                                     <label class="input-group-text small bg-light" for="cantidad-{{ producto.id }}">Cant.</label>
                                                     <input type="number" 
-                                           name="cantidad" 
-                                           id="cantidad-{{ producto.id }}" 
-                                           class="form-control" 
-                                           value="1" 
-                                           min="1" 
-                                           max="{{ producto.cantidad }}" 
-                                           style="max-width: 70px;">
+                                                            name="cantidad" 
+                                                            id="cantidad-{{ producto.id }}" 
+                                                            class="form-control" 
+                                                            value="1" 
+                                                            min="1" 
+                                                            max="{{ producto.cantidad }}" 
+                                                            style="max-width: 70px;">
                                     
                                                     <button type="submit" class="btn btn-danger">
                                                         <i class="fa-solid fa-cart-plus me-1"></i>Añadir
                                                     </button>
                                                 </div>
-                                            </form>
+                                            </form> -->
                                             
                                         </div>
                                     </div>
@@ -168,19 +186,25 @@
             </div>
         </main>
 
-        <footer class="bg-dark text-white pt-4 pb-2">
+        <footer class="bg-dark text-white pt-4 pb-2 container-fluid">
             <div class="container text-center">
                 <div class="social-media mb-3">
-                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x"></i></a>
-                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x"></i></a>
-                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-facebook fa-2x"></i></a>
-                    <a href="+58 422-5924400" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x"></i></a>
+                    <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x icons-a"></i></a>
+                    <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x icons-a"></i></a>
+                    <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-facebook fa-2x icons-a"></i></a>
+                    <a href="https://wa.me/584225924400" target="_blank" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x icons-a"></i></a>
                 </div>
                 <div class="footer-logo mb-3">
-                    <img src="{% static 'img/Logo_Triven.svg' %}" width="70" alt="Logotipo Trivens">
+                    <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens">
                 </div>
-                <p class="text-muted"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
+                <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
+                
             </div>
         </footer>
-        
+<style>
+    .icons-a:hover{
+        color: #dc3545;
+        transform: translateY(-4px);
+    }
+</style>
 {% endblock %}

@@ -4,7 +4,7 @@
 <main class="container">
     <div class="row">
         <div class="col-md-6 offset-md-3 col-lg-4 offset-lg-4 mt-5">
-            <form action="/manager/product/create/" method="POST" class="card card-body p-4 shadow-lg border-0 bg-white">
+            <form action="{% url 'create_product' %}" method="POST" class="card card-body p-4 shadow-lg border-0 bg-white" enctype="multipart/form-data">
                 <h1 class="text-center text-primary mb-4 fw-bold"><i class="fa-solid fa-box me-2"></i>Crear Producto</h1>
                 
                 {% if error %}
@@ -35,4 +35,27 @@
         </div>
     </div>
 </main>
+
+<script>
+// Script para previsualización de imagen (déjalo donde está o inclúyelo aquí)
+    document.getElementById('input_imagen').addEventListener('change', function(event) {
+        const input = event.target;
+        const imagenPrevia = document.getElementById('imagen_previa');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                imagenPrevia.src = e.target.result;
+                imagenPrevia.style.display = 'block'; // Muestra la imagen
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            imagenPrevia.src = '#';
+            imagenPrevia.style.display = 'none'; // Oculta si no hay archivo
+        }
+    });
+
+</script>
 {% endblock %}

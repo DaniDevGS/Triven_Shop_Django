@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
+# Asegúrate de importar Q si no lo has hecho, es vital para combinaciones de filtros OR/AND
+from django.db.models import Q
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib.auth import login, logout, authenticate
@@ -11,16 +13,13 @@ from.conversion import get_exchange_rate
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal
+from django.views.decorators.http import require_POST # <--- Importar require_POST
 import uuid # Para generar el ID único
 from io import BytesIO # Para manejar el PDF en memoria
 from django.core.files.base import ContentFile # Para guardar archivos
 from django.db import transaction # Para asegurar la integridad de la reducción de stock
 import urllib.parse # Para codificar el mensaje de WhatsApp
 
-# Importaciones para ReportLab (Generación de PDF)
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import inch
 # Create your views here.
 # Create your views here.
 
@@ -53,7 +52,7 @@ def products_to_send(request):
     productos = Producto.objects.filter(user=request.user, datecompleted__isnull=False).order_by('-datecompleted')
     return render(request, 'manager/products.html', {'productos': productos, 'sent_view': True})
 
-@login_required
+@login_required  # pyright: ignore[reportArgumentType, reportCallIssue]
 def create_product(request):
     if request.method == 'GET':
         return render(request, 'manager/create_product.html', {
@@ -61,32 +60,53 @@ def create_product(request):
         })
     else:
         try:
-            form = ProductForm(request.POST)
-            new_product = form.save(commit=False)
-            new_product.user = request.user
-            new_product.save()
-            return redirect('products')
+            form = ProductForm(request.POST, request.FILES)
+            if form.is_valid(): # Es buena práctica verificar si el formulario es válido
+                new_product = form.save(commit=False)
+                new_product.user = request.user
+                new_product.save()
+                return redirect('products')
+            else:
+                # Si el formulario no es válido (por ejemplo, errores de imagen),
+                # vuelve a renderizar con el formulario y sus errores.
+                return render(request, 'manager/create_product.html', {
+                    'form': form # Usa el formulario que ya contiene los errores
+                })
         
         except ValueError:
             return render(request, 'manager/create_product.html', {
-                'form': ProductForm,
+                'form': ProductForm(request.POST, request.FILES), # Pasamos los datos y archivos de nuevo
                 'error': 'Porfavor provide valida data'
             })
 
+# products/views.py
 @login_required
 def product_detail(request, products_id:int):
+    # ... (método GET se mantiene igual)
     if request.method == 'GET':
         producto = get_object_or_404(Producto, pk=products_id, user=request.user)
         form = ProductForm(instance=producto)
-        return render(request, 'manager/products_detail.html', {'productos': producto, 'form': form})
+        # Aquí también es buena práctica renombrar a 'producto' o 'product' en el contexto
+        return render(request, 'manager/products_detail.html', {'productos': producto, 'form': form}) 
     else:
+        producto = get_object_or_404(Producto, pk=products_id, user=request.user)
         try:
-            producto = get_object_or_404(Producto, pk=products_id, user=request.user)
-            form = ProductForm(request.POST, instance=producto)
-            form.save()
-            return redirect('products')
+            # *** CAMBIO CLAVE: Agrega request.FILES para la edición ***
+            form = ProductForm(request.POST, request.FILES, instance=producto)
+            if form.is_valid():
+                form.save()
+                return redirect('products')
+            else:
+                return render(request, 'manager/products_detail.html', {
+                    'productos': producto, 
+                    'form': form # Usa el formulario con errores si falla
+                })
         except ValueError:
-            return render(request, 'manager/products_detail.html', {'productos': producto, 'form': form, 'error': "Error updating product"})
+            return render(request, 'manager/products_detail.html', {
+                'productos': producto, 
+                'form': form, # El formulario en el catch es el que falló
+                'error': "Error updating product"
+            })
 
 def sent_product(request, products_id:int):
     # Productos enviados
@@ -112,11 +132,79 @@ def delete_product(request, products_id:int):
 
 def pagos_verificar(request):
     # ...
-    return render(request, 'manager/pagos_verificar.html')
+    ordenes_pendientes = OrdenDeCompra.objects.filter(estado='PENDIENTE').order_by('-fecha_orden')
+    
+    context = {
+        'ordenes_pendientes': ordenes_pendientes,
+        'sent_view': False # Indica que estamos en la vista de pendientes
+    }
+    return render(request, 'manager/pagos_verificar.html', context)
 
 
 def pagos_aprovados(request):
-    return render(request,'manager/pagos_verificados.html')
+    # ...
+    ordenes_aprovadas = OrdenDeCompra.objects.filter(estado='APROBADA').order_by('-fecha_orden')
+    
+    context = {
+        'ordenes_aprovadas': ordenes_aprovadas, # Las órdenes aprobadas
+        'sent_view': True # Indica que estamos en la vista de aprobadas
+    }
+    return render(request, 'manager/pagos_verificar.html', context)
+
+def pagos_rechazados(request):
+    ordenes_rechazadas = OrdenDeCompra.objects.filter(estado='RECHAZADA').order_by('-fecha_orden')
+
+    context = {
+        'ordenes_rechazadas': ordenes_rechazadas,
+        'orden_rechazar': True
+    }
+    return render(request, 'manager/pagos_verificar.html', context)
+    
+
+@login_required
+@require_POST # Se recomienda usar POST para cambios de estado
+def orden_aprobar(request, orden_id):
+    """Marca una OrdenDeCompra como APROBADA."""
+    orden = get_object_or_404(OrdenDeCompra, pk=orden_id)
+    
+    # Solo se puede aprobar si está PENDIENTE
+    if orden.estado == 'PENDIENTE':
+        orden.estado = 'APROBADA'
+        orden.save()
+        messages.success(request, f"La orden ID **{orden.id_compra}** ha sido APROBADA.")
+    else:
+        messages.error(request, f"La orden ID **{orden.id_compra}** ya está en estado {orden.estado}.")
+        
+    return redirect('pagos_verificar')
+
+@login_required
+@require_POST # Se recomienda usar POST para cambios de estado
+def orden_rechazar(request, orden_id):
+    """Marca una OrdenDeCompra como RECHAZADA y revierte el stock."""
+    orden = get_object_or_404(OrdenDeCompra, pk=orden_id)
+    
+    if orden.estado == 'PENDIENTE':
+        try:
+            with transaction.atomic():
+                # 1. Cambiar estado a RECHAZADA
+                orden.estado = 'RECHAZADA'
+                orden.save()
+                
+                # 2. Revertir el stock de todos los productos
+                for item in orden.items_orden.all(): # type: ignore
+                    producto = item.producto
+                    producto.cantidad += item.cantidad # Devolver la cantidad al stock
+                    producto.save()
+                    
+                messages.warning(request, f"La orden ID **{orden.id_compra}** ha sido RECHAZADA y el stock ha sido revertido.")
+                
+        except Exception as e:
+            messages.error(request, f"Error al rechazar la orden y revertir stock: {str(e)}")
+    else:
+        messages.error(request, f"La orden ID **{orden.id_compra}** no puede ser rechazada. Estado actual: {orden.estado}.")
+    
+    return redirect('pagos_verificar')
+
 # ========================================================================================================================================
 
 
@@ -143,24 +231,28 @@ def index(request):
 def products_store(request):
     # 1. Obtener parámetros de filtro de la URL (GET request)
     category_code = request.GET.get('category')
-    min_price_str = request.GET.get('min_price') # Nuevo: Precio Mínimo
-    max_price_str = request.GET.get('max_price') # Nuevo: Precio Máximo
+    min_price_str = request.GET.get('min_price')
+    max_price_str = request.GET.get('max_price')
+    # NUEVO: Obtener el término de búsqueda
+    search_query = request.GET.get('q') # Usaremos 'q' como nombre del parámetro de búsqueda
     
     # 2. Inicializar el queryset base
     productos_queryset = Producto.objects.filter(datecompleted__isnull=False)
 
-    # 3. Aplicar filtro de CATEGORÍA
-    # Nota: Usaremos 'categoria' en el filtro de Django para coincidir con el error que tenías,
-    # que indica que ese es el nombre del campo en tu modelo/DB.
+    # NUEVO: 3. Aplicar filtro de BÚSQUEDA por título
+    if search_query:
+        # Filtra productos cuyo título contenga (insensible a mayúsculas/minúsculas) el término de búsqueda
+        productos_queryset = productos_queryset.filter(title__icontains=search_query)
+
+    # 4. Aplicar filtro de CATEGORÍA (Mantenemos la numeración del código original)
     if category_code:
         productos_queryset = productos_queryset.filter(category=category_code)
 
-    # 4. Aplicar filtro de PRECIO
+    # 5. Aplicar filtro de PRECIO
     
     # Conversión segura del precio mínimo
     if min_price_str and min_price_str.isdigit():
         min_price = Decimal(min_price_str)
-        # Filtra productos donde el 'price' sea mayor o igual al mínimo
         productos_queryset = productos_queryset.filter(price__gte=min_price)
     else:
         min_price = None
@@ -168,12 +260,11 @@ def products_store(request):
     # Conversión segura del precio máximo
     if max_price_str and max_price_str.isdigit():
         max_price = Decimal(max_price_str)
-        # Filtra productos donde el 'price' sea menor o igual al máximo
         productos_queryset = productos_queryset.filter(price__lte=max_price)
     else:
         max_price = None
         
-    # 5. Ordenar el queryset final y obtener la cantidad
+    # 6. Ordenar el queryset final y obtener la cantidad
     productos = productos_queryset.order_by('-datecompleted')
     numero_productos = productos.count()
 
@@ -190,17 +281,19 @@ def products_store(request):
         else:
             producto.price_ves = None # pyright: ignore[reportAttributeAccessIssue]
 
-    # 6. Retornar los datos filtrados y los valores activos para rellenar el formulario
+    # 7. Retornar los datos filtrados y los valores activos
     return render(request, 'tienda.html',
     {
         'productos': productos,
         'sent_view': True,
         'cantidad': numero_productos,
-        'bolivar_rate': bolivar_rate,
-        'categorias': CATEGORIA_CHOICES,
-        'current_category': category_code, # Usado para la categoría activa
-        'min_price': min_price,           # Nuevo: Usado para rellenar el input de precio mínimo
-        'max_price': max_price            # Nuevo: Usado para rellenar el input de precio máximo
+        'bolivar_rate': bolivar_rate, # Asume que 'bolivar_rate' se calcula arriba
+        'categorias': CATEGORIA_CHOICES, # Asume que 'CATEGORIA_CHOICES' está definido
+        'current_category': category_code,
+        'min_price': min_price,
+        'max_price': max_price,
+        # NUEVO: Pasar el término de búsqueda actual al template para rellenar la barra
+        'search_query': search_query,
     })
 # ===============================================================================================================
 # =================================== Lógica del Carrito =======================================================
@@ -533,14 +626,40 @@ def compra_productos(request):
     }
     return render(request, 'pago.html', context)
 
+
+
 #=================================================================================================================================
+
+
 
 @login_required
 def user_details(request):
-    username = request.user.username
+    # Cargar las órdenes que irán en la pestaña 'Por Verificar' (PENDIENTE)
+    ordenes_pendientes = OrdenDeCompra.objects.filter(
+        estado='PENDIENTE',
+        user=request.user # Asegúrate de usar 'user' si ese es el nombre de la FK en OrdenDeCompra
+    ).order_by('-fecha_orden')
+    
+    # También puedes cargar las otras listas, aunque no se usen hasta que se haga clic en la pestaña
+    # (Esto puede ser ineficiente si las listas son muy grandes, pero simplifica el template)
+    ordenes_aprobadas = OrdenDeCompra.objects.filter(
+        estado='APROBADA',
+        user=request.user
+    ).order_by('-fecha_orden')
+
+    ordenes_rechazadas = OrdenDeCompra.objects.filter(
+        estado='RECHAZADA',
+        user=request.user
+    ).order_by('-fecha_orden')
 
     contexto = {
-        'username': username
+        'username': request.user.username,
+        # Variables de contexto para el template
+        'ordenes_pendientes': ordenes_pendientes,
+        'ordenes_aprobadas': ordenes_aprobadas,
+        'ordenes_rechazadas': ordenes_rechazadas,
+        # Sent_view se puede omitir o manejar de otra forma en el HTML
+        'sent_view': False # Default para la pestaña Por Verificar
     }
 
     return render(request, 'user_detail.html', contexto)

@@ -40,6 +40,13 @@ class OrdenDeCompra(models.Model):
         ('RECHAZADA', 'Rechazada'),
     )
     
+    # Campo nuevo para la nota del manager
+    nota_manager = models.TextField(
+        null=True, 
+        blank=True, 
+        verbose_name="Nota del Manager"
+    )
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     # ID único y aleatorio para referenciar el pago
     id_compra = models.CharField(max_length=100, unique=True) 

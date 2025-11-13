@@ -2,99 +2,406 @@
 {% load static %}
 
 {% block content %}
+<style>
+    /* Estilos de Píldoras de Navegación */
+    .nav-pills .nav-link {
+        color: #dc3545; /* Color principal (rojo/warning del original) */
+        border: 1px solid #dc3545;
+        margin: 0 5px 10px 5px; /* Espacio para móvil */
+        padding: 10px 20px;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+    .nav-pills .nav-link.active, .nav-pills .nav-link:hover {
+        background-color: #dc3545;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Estilo de la Hero Card (Perfil) */
+    #Hero-card {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Gradiente suave */
+        border-radius: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: 2px solid #dc3545; /* Borde sutil del color principal */
+    }
+
+    /* Estilo para las tarjetas de órdenes (más visuales) */
+    .order-card-pending { border-left: 5px solid #ffc107; } /* Warning */
+    .order-card-approved { border-left: 5px solid #198754; } /* Success */
+    .order-card-rejected { border-left: 5px solid #dc3545; } /* Danger */
+
+    .order-card .card-header {
+        background-color: #f7f7f7;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 1rem 1.5rem;
+    }
+    .order-card .product-item {
+        border-bottom: 1px dashed #eee;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+    .order-card .product-item:last-child {
+        border-bottom: none;
+    }
+    .icons-a:hover {
+        color: #dc3545;
+        transform: translateY(-4px);
+    }
+
+    /* Para que el smooth scroll funcione bien */
+    section {
+        padding-top: 20px;
+        margin-top: -20px;
+    }
+</style>
+
+
 <main class="container py-5">
-    <h1>Panel detalles de usuario</h1>
-    <p>Bienvenido al panel de usuario</p>
-    <section class="col-md-8 offset-md-2" id="Hero card">
-        <h2>{{ username }}</h2>
-        <a href="logout/" class="nav-link text-danger ms-lg-2"><i class="fa-solid fa-door-open me-1"></i>Cerrar Sesión</a>
+    <h1 class="text-center mb-2 text-dark fw-bolder">Panel de Usuario</h1>
+    <p class="text-center text-muted mb-5">Bienvenido, aquí puedes gestionar tus compras y ver el estado de tus órdenes.</p>
+
+    <!--============================= HERO CARD (PERFIL) ================================================-->
+    <section class="card mb-5" id="Hero-profile">
+        <div class="card-body p-4 p-md-5 d-flex flex-column flex-md-row align-items-center justify-content-between">
+            <div class="text-center text-md-start mb-4 mb-md-0">
+                <i class="fa-solid fa-circle-user fa-5x text-danger mb-3"></i>
+                <h2 class="card-title fw-bolder mb-1 display-5 text-dark">{{ username }}</h2>
+                <span class="text-muted fw-light">Usuario activo en el sistema.</span>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <a href="#Orders-pending" class="btn btn-primary fw-bold btn-lg">
+                    <i class="fa-solid fa-cart-shopping me-2"></i>Ver Mis Órdenes
+                </a>
+                <a href="logout/" class="btn btn-outline-danger fw-bold">
+                    <i class="fa-solid fa-door-open me-2"></i>Cerrar Sesión
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <hr class="my-5">
+
+    <!--============================= BARRA DE NAVEGACIÓN (FUNCIONALIDAD SCROLL) ================================================-->
+    <header class="mb-5">
         <nav>
-            <ul>
-                <li></li>
+            <!-- He actualizado los hrefs para que coincidan con las nuevas IDs de las secciones -->
+            <ul class="nav nav-pills justify-content-center flex-column flex-sm-row" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active scroll-link" data-target="#Hero-profile" href="#Hero-profile">
+                        <i class="fa-solid fa-user me-2"></i>Perfil
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link scroll-link" data-target="#Orders-pending" href="#Orders-pending">
+                        <i class="fa-solid fa-file-import me-2"></i>Por Verificar
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link scroll-link" data-target="#Orders-approved" href="#Orders-approved">
+                        <i class="fa-solid fa-certificate me-2"></i>Aprobados
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link scroll-link" data-target="#Orders-rejected" href="#Orders-rejected">
+                        <i class="fa-regular fa-circle-xmark me-2"></i>Pagos Rechazados
+                    </a>
+                </li>
             </ul>
         </nav>
-    </section>
+    </header>
 
-    <!--=============================PRODUCTOS POR VERIFICAR================================================-->
-    <section>
-        <h2>Productos por verificar</h2>
+    <!--============================= PRODUCTOS POR VERIFICAR (PENDIENTE) ================================================-->
+    <!-- ID de sección actualizada a Orders-pending -->
+    <section id="Orders-pending" class="mb-5">
+        <h2 class="mb-4 text-warning fw-bold"><i class="fa-solid fa-clock-rotate-left me-2"></i>Órdenes Pendientes de Verificación</h2>
 
-        <article class="col-12">
-            <div class="card card shadow-sm">
-                <a class="text-decoration-none text-dark" href="">
-                    <div class="card-body">
-                        <header class="d-flex justify-content-between align-items-center mb-3">
-                            <h2 class="card-title fw-bold text-truncate text-primary"></h2>
-                            <span class="badge bg-secondary-subtle text-secondary py-2 px-3">
-                                <i class="fa-solid fa-user me-1"></i>
-                            </span>
-                        </header>
+        {% if ordenes_pendientes%}
+            <div class="row g-4">
+                {% for orden in ordenes_pendientes %}
+                    <div class="col-12">
+                        <!-- Estilo de tarjeta mejorado para Pendiente -->
+                        <div class="card shadow order-card order-card-pending">
+                            <div class="card-body p-4">
+                                <header class="d-flex justify-content-between align-items-start mb-3">
+                                    <h3 class="card-title fw-bold text-truncate text-dark h5 mb-0">
+                                        Orden ID: <span class="text-warning">{{ orden.id_compra }}</span>
+                                    </h3>
+                                    <span class="badge bg-warning text-dark py-2 px-3 fw-bold">
+                                        PENDIENTE
+                                    </span>
+                                </header>
 
-                        <p class="card-text text-muted mb-2"></p>
+                                <hr class="my-3">
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <h5 class="fw-bolder mb-3 text-secondary">Detalle de Productos:</h5>
+                                        <!-- Diseño de lista mejorado -->
+                                        <ul class="list-group list-group-flush mb-4">
+                                            {% for item in orden.items_orden.all %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 product-item">
+                                                <div class="text-dark d-flex align-items-center">
+                                                    <i class="fa-solid fa-tag me-2 text-muted"></i>
+                                                    {{ item.producto.title }}
+                                                    <span class="badge bg-secondary ms-2">x{{ item.cantidad }}</span>
+                                                </div>
+                                                <small class="text-dark fw-bold">${{ item.total_item|floatformat:2 }}</small>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-4 border-start ps-md-4">
+                                        <div class="mb-3">
+                                            <p class="text-muted mb-1 fw-bold">Total Pagado:</p>
+                                            <p class="h3 text-warning fw-bolder">${{ orden.subtotal_usd|floatformat:2 }}</p>
+                                        </div>
 
-                        <div class="d-flex justify-content-between align-items-end">
-                            <small class="text-info fw-bold">
-                                <i class="fa-regular fa-calendar-alt me-1"></i>
-                                <span class="text-muted"></span>
-                            </small>
+                                        <p class="text-muted mb-1"><i class="fa-regular fa-calendar-alt me-1"></i> Fecha: {{ orden.fecha_orden|date:"d M Y" }}</p>
+                                        <p class="text-muted mb-3"><i class="fa-regular fa-clock me-1"></i> Hora: {{ orden.fecha_orden|date:'H:i' }}</p>
 
-                                <img src="" alt="" class="img-thumbnail rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                                        <!-- Comprobante visual más destacado -->
+                                        {% if orden.imagen_comprobante %}
+                                        <p class="fw-bold mb-2">Comprobante:</p>
+                                        <a href="{{ orden.imagen_comprobante.url }}" target="_blank" class="d-block position-relative">
+                                            <img src="{{ orden.imagen_comprobante.url }}" alt="Comprobante de Pago {{ orden.id_compra }}" class="img-thumbnail rounded shadow-sm w-100" style="height: 120px; object-fit: cover;">
+                                            <span class="badge bg-success position-absolute top-0 start-100 translate-middle rounded-pill">Ver</span>
+                                        </a>
+                                        {% else %}
+                                        <div class="alert alert-danger p-2 text-center">
+                                            <i class="fa-solid fa-triangle-exclamation me-1"></i> Sin Comprobante
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </a>
-
+                {% endfor %}
             </div>
-        </article>
+        {% else %}
+        <div class="alert alert-info text-center shadow-sm">No tienes órdenes pendientes de verificación.</div>
+        {% endif %}
     </section>
 
-    <!--=============================APROVADOS================================================-->
-    <section>
-        <h2>Productos Aprovados</h2>
+    <!--============================= PRODUCTOS APROBADOS ================================================-->
+    <!-- ID de sección actualizada a Orders-approved -->
+    <section id="Orders-approved" class="mb-5">
+        <h2 class="mb-4 text-success fw-bold"><i class="fa-solid fa-check-circle me-2"></i>Órdenes Aprobadas</h2>
 
-        <article class="col-12">
-            <div class="card card shadow-sm">
-                <a class="text-decoration-none text-dark" href="">
-                    <div class="card-body">
-                        <header class="d-flex justify-content-between align-items-center mb-3">
-                            <h2 class="card-title fw-bold text-truncate text-primary"></h2>
-                            <span class="badge bg-secondary-subtle text-secondary py-2 px-3">
-                                <i class="fa-solid fa-user me-1"></i>
-                            </span>
-                        </header>
+        {% if ordenes_aprobadas %}
+            <div class="row g-4">
+                {% for orden in ordenes_aprobadas %}
+                    <div class="col-12">
+                        <!-- Estilo de tarjeta mejorado para Aprobado -->
+                        <div class="card shadow order-card order-card-approved">
+                            <div class="card-body p-4">
+                                <header class="d-flex justify-content-between align-items-start mb-3">
+                                    <h3 class="card-title fw-bold text-truncate text-dark h5 mb-0">
+                                        Orden ID: <span class="text-success">{{ orden.id_compra }}</span>
+                                    </h3>
+                                    <span class="badge bg-success text-white py-2 px-3 fw-bold">
+                                        APROBADO
+                                    </span>
+                                </header>
 
-                        <p class="card-text text-muted mb-2"></p>
+                                <hr class="my-3">
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <h5 class="fw-bolder mb-3 text-secondary">Detalle de Productos:</h5>
+                                        <ul class="list-group list-group-flush mb-4">
+                                            {% for item in orden.items_orden.all %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 product-item">
+                                                <div class="text-dark d-flex align-items-center">
+                                                    <i class="fa-solid fa-tag me-2 text-muted"></i>
+                                                    {{ item.producto.title }}
+                                                    <span class="badge bg-secondary ms-2">x{{ item.cantidad }}</span>
+                                                </div>
+                                                <small class="text-dark fw-bold">${{ item.total_item|floatformat:2 }}</small>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-4 border-start ps-md-4">
+                                        <div class="mb-3">
+                                            <p class="text-muted mb-1 fw-bold">Total Pagado:</p>
+                                            <p class="h3 text-success fw-bolder">${{ orden.subtotal_usd|floatformat:2 }}</p>
+                                        </div>
 
-                        <div class="d-flex justify-content-between align-items-end">
-                            <small class="text-info fw-bold">
-                                <i class="fa-regular fa-calendar-alt me-1"></i>
-                                <span class="text-muted"></span>
-                            </small>
+                                        <p class="text-muted mb-1"><i class="fa-regular fa-calendar-alt me-1"></i> Fecha: {{ orden.fecha_orden|date:"d M Y" }}</p>
+                                        <p class="text-muted mb-3"><i class="fa-regular fa-clock me-1"></i> Hora: {{ orden.fecha_orden|date:'H:i' }}</p>
 
-                                <img src="" alt="" class="img-thumbnail rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                                        {% if orden.imagen_comprobante %}
+                                        <p class="fw-bold mb-2">Comprobante:</p>
+                                        <a href="{{ orden.imagen_comprobante.url }}" target="_blank" class="d-block position-relative">
+                                            <img src="{{ orden.imagen_comprobante.url }}" alt="Comprobante de Pago {{ orden.id_compra }}" class="img-thumbnail rounded shadow-sm w-100" style="height: 120px; object-fit: cover;">
+                                            <span class="badge bg-success position-absolute top-0 start-100 translate-middle rounded-pill">Ver</span>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </a>
-
+                {% endfor %}
             </div>
-        </article>
+        {% else %}
+        <div class="alert alert-info text-center shadow-sm">No tienes órdenes Aprobadas.</div>
+        {% endif %}
     </section>
+
+    <!--============================= PRODUCTOS RECHAZADOS ================================================-->
+    <!-- ID de sección actualizada a Orders-rejected -->
+    <section id="Orders-rejected" class="mb-5">
+        <h2 class="mb-4 text-danger fw-bold"><i class="fa-solid fa-ban me-2"></i>Pagos Rechazados</h2>
+
+        {% if ordenes_rechazadas %}
+            <div class="row g-4">
+                {% for orden in ordenes_rechazadas %}
+                    <div class="col-12">
+                        <!-- Estilo de tarjeta mejorado para Rechazado -->
+                        <div class="card shadow order-card order-card-rejected">
+                            <div class="card-body p-4">
+                                <header class="d-flex justify-content-between align-items-start mb-3">
+                                    <h3 class="card-title fw-bold text-truncate text-dark h5 mb-0">
+                                        Orden ID: <span class="text-danger">{{ orden.id_compra }}</span>
+                                    </h3>
+                                    <span class="badge bg-danger text-white py-2 px-3 fw-bold">
+                                        RECHAZADO
+                                    </span>
+                                </header>
+
+                                <hr class="my-3">
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <h5 class="fw-bolder mb-3 text-secondary">Detalle de Productos:</h5>
+                                        <ul class="list-group list-group-flush mb-4">
+                                            {% for item in orden.items_orden.all %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 product-item">
+                                                <div class="text-dark d-flex align-items-center">
+                                                    <i class="fa-solid fa-tag me-2 text-muted"></i>
+                                                    {{ item.producto.title }}
+                                                    <span class="badge bg-secondary ms-2">x{{ item.cantidad }}</span>
+                                                </div>
+                                                <small class="text-dark fw-bold">${{ item.total_item|floatformat:2 }}</small>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-4 border-start ps-md-4">
+                                        <div class="mb-3">
+                                            <p class="text-muted mb-1 fw-bold">Total Pagado:</p>
+                                            <p class="h3 text-danger fw-bolder">${{ orden.subtotal_usd|floatformat:2 }}</p>
+                                        </div>
+
+                                        <p class="text-muted mb-1"><i class="fa-regular fa-calendar-alt me-1"></i> Fecha: {{ orden.fecha_orden|date:"d M Y" }}</p>
+                                        <p class="text-muted mb-3"><i class="fa-regular fa-clock me-1"></i> Hora: {{ orden.fecha_orden|date:'H:i' }}</p>
+
+                                        {% if orden.imagen_comprobante %}
+                                        <p class="fw-bold mb-2">Comprobante:</p>
+                                        <a href="{{ orden.imagen_comprobante.url }}" target="_blank" class="d-block position-relative">
+                                            <img src="{{ orden.imagen_comprobante.url }}" alt="Comprobante de Pago {{ orden.id_compra }}" class="img-thumbnail rounded shadow-sm w-100" style="height: 120px; object-fit: cover;">
+                                            <span class="badge bg-success position-absolute top-0 start-100 translate-middle rounded-pill">Ver</span>
+                                        </a>
+                                        {% else %}
+                                        <div class="alert alert-danger p-2 text-center">
+                                            <i class="fa-solid fa-triangle-exclamation me-1"></i> Sin Comprobante
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+        <div class="alert alert-info text-center shadow-sm">No tienes órdenes Rechazadas.</div>
+        {% endif %}
+    </section>
+
 </main>
 
 
-<!-- =======================================================FOOTER DE CONTACTOS========================================================================== -->
-        <footer class="bg-dark text-white pt-4 pb-2 container-fluid">
-            <div class="container text-center">
-                <div class="social-media mb-3">
-                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x"></i></a>
-                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x"></i></a>
-                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-facebook fa-2x"></i></a>
-                    <a href="+58 422-5924400" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x"></i></a>
-                </div>
-                <div class="footer-logo mb-3">
-                    <img src="{% static 'img/Logo_Triven.svg' %}" width="70" alt="Logotipo Trivens">
-                </div>
-                <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
-                
-            </div>
-        </footer>
+<!-- =======================================================FOOTER DE CONTACTOS (SIN CAMBIOS) ========================================================================== -->
+<footer class="bg-dark text-white pt-4 pb-2 container-fluid">
+    <div class="container text-center">
+        <div class="social-media mb-3">
+            <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-instagram fa-2x"></i></a>
+            <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-tiktok fa-2x"></i></a>
+            <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-facebook fa-2x"></i></a>
+            <a href="https://wa.me/584225924400" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-whatsapp fa-2x"></i></a>
+        </div>
+        <div class="footer-logo mb-3">
+            <!-- Asumiendo que esta es una URL estática de Django -->
+            <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens">
+        </div>
+        <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
+        
+    </div>
+</footer>
+
+<!-- JavaScript para Smooth Scroll y Activación de Botones -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const scrollLinks = document.querySelectorAll('.scroll-link');
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link.scroll-link');
+
+        // Función para el desplazamiento suave
+        scrollLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('data-target');
+                const targetElement = document.querySelector(targetId);
+
+                if (targetElement) {
+                    // Desplazamiento suave (se resta 70px para dejar espacio a una posible barra de navegación fija)
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 70, 
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Función para activar el enlace de navegación al hacer scroll (observador)
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const sectionId = entry.target.getAttribute('id');
+                const correspondingLink = document.querySelector(`.nav-link[data-target="#${sectionId}"]`);
+
+                if (entry.isIntersecting) {
+                    // Remover 'active' de todos
+                    navLinks.forEach(link => link.classList.remove('active'));
+                    // Agregar 'active' al enlace correspondiente
+                    if (correspondingLink) {
+                        correspondingLink.classList.add('active');
+                    }
+                }
+            });
+        }, {
+            root: null, // viewport
+            rootMargin: '0px 0px -80% 0px', // Activar cuando la sección esté a 80% del inicio del viewport
+            threshold: 0 // Iniciar inmediatamente
+        });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+        
+        // Configurar el enlace activo por defecto al cargar la página
+        // Simular clic en "Perfil" para que la apariencia inicial sea correcta
+        const defaultActiveLink = document.querySelector('.nav-link[data-target="#Hero-profile"]');
+        if(defaultActiveLink) {
+             defaultActiveLink.classList.add('active');
+        }
+    });
+</script>
+
 {% endblock %}

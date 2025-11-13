@@ -5,42 +5,222 @@
     <div class="row">
         <div class="col-md-8 offset-md-2">
             {% if sent_view %}
-            <h1 class="text-center display-4 fw-bold text-success mb-5"><i class="fa-solid fa-circle-check me-2"></i>Pagos aprovados</h1>
+            <h1 class="text-center display-4 fw-bold text-success mb-5"><i class="fa-solid fa-certificate"></i>Pagos aprovados</h1>
+            {% elif orden_rechazar %}
+            <h1 class="text-center display-4 fw-bold text-danger mb-5"><i class="fa-regular fa-circle-xmark"></i>Pagos rechazados</h1>
             {% else %}
-            <h1 class="text-center display-4 fw-bold text-primary mb-5"><i class="fa-solid fa-clipboard-list me-2"></i>Pagos verificar</h1>
+            <h1 class="text-center display-4 fw-bold text-info mb-5"><i class="fa-solid fa-file-import"></i>Pagos verificar</h1>
             {% endif %}
 
+            {% if ordenes_pendientes %}
             <div class="row g-4">
-                {% for producto in productos %}
+                {% for orden in ordenes_pendientes %}
                     <div class="col-12">
                         <div class="card shadow-sm {% if sent_view %}border-success{% else %}border-warning{% endif %}">
-                            <a class="text-decoration-none text-dark" href=" {% url 'products_detail' producto.id %} ">
-                                <div class="card-body">
-                                    <header class="d-flex justify-content-between align-items-center mb-3">
-                                        <h2 class="card-title fw-bold text-truncate text-primary">{{ id_compra_actual }}</h2>
-                                        <span class="badge bg-secondary-subtle text-secondary py-2 px-3">
-                                            <i class="fa-solid fa-user me-1"></i>{{ request.user.username }}
-                                        </span>
-                                    </header>
+                            <div class="card-body"> 
+                                <header class="d-flex justify-content-between align-items-center mb-3">
+                                    <h2 class="card-title fw-bold text-truncate text-primary">ID: {{ orden.id_compra }}</h2>
+                                    <span class="badge bg-secondary-subtle text-secondary py-2 px-3">
+                                        <i class="fa-solid fa-user me-1"></i>Usuario: {{ orden.user.username }}
+                                    </span>
+                                </header>
 
-                                    <p class="card-text text-muted mb-2">{{ producto.description|truncatechars:100 }}</p>
+                                <hr>
+                            
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h5 class="fw-bolder mb-3 text-secondary">Productos comprados</h5>
 
-                                    <div class="d-flex justify-content-between align-items-end">
-                                        <small class="text-info fw-bold">
-                                            <i class="fa-regular fa-calendar-alt me-1"></i>{{ producto.datecompleted|date:'M j, Y' }}
-                                            <span class="text-muted">a las {{ producto.datecompleted|date:'H:i' }}</span>
-                                        </small>
-                                        
-                                        {% if producto.imagen %}
-                                            <img src="{{ producto.imagen.url }}" alt="{{ producto.title }}" class="img-thumbnail rounded" style="width: 80px; height: 80px; object-fit: cover;">
-                                        {% endif %}
+                                        <ul class="list-group list-group-flush mb-4">
+                                            {% for item in orden.items_orden.all %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center ps-0">
+                                                <div class="text-dark">
+                                                    {{ item.producto.title }}
+                                                    <span class="badge bg-secondary-subtle text-dark ms-2">x{{ item.cantidad }}</span>
+                                                </div>
+
+                                                <small class="text-muted fw-bold">${{ item.total_item|floatformat:2 }}</small>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
                                     </div>
                                 </div>
-                            </a>
+
+                                <p class="card-text text-muted mb-2">Total pago: ${{ orden.subtotal_usd|floatformat:2 }}</p>
+
+                                <div class="d-flex justify-content-between align-items-end mb-3">
+                                    <small class="text-info fw-bold">
+                                        <i class="fa-regular fa-calendar-alt me-1"></i>{{ orden.fecha_orden|date:"d M Y" }}
+                                        <span class="text-muted">a las {{ orden.fecha_orden|date:'H:i' }}</span>
+                                    </small>
+                                    
+                                    {% if orden.imagen_comprobante %}
+                                    <a href="{{ orden.imagen_comprobante.url }}" target="_blank">
+                                        <img src="{{ orden.imagen_comprobante.url }}" alt="Comprobante de Pago {{ orden.id_compra }}" class="img-thumbnail rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                                    </a>
+                                    {% else %}
+                                    <p class="text-danger text-center"><i class="fa-solid fa-triangle-exclamation me-1"></i> Sin Comprobante</p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                                    
+                                    <form method="POST" action="{% url 'orden_aprobar' orden.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fa-solid fa-check-circle me-1"></i> Aprobar
+                                        </button>
+                                    </form>
+
+                                    <form method="POST" action="{% url 'orden_rechazar' orden.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="fa-solid fa-times-circle me-1"></i> Rechazar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 {% endfor %}
             </div>
+
+            {% elif ordenes_aprovadas %}
+            <div class="row g-4">
+                {% for orden in ordenes_aprovadas %}
+                    <div class="col-12">
+                        <div class="card shadow-sm {% if sent_view %}border-success{% else %}border-warning{% endif %}">
+                            <div class="card-body"> 
+                                <header class="d-flex justify-content-between align-items-center mb-3">
+                                    <h2 class="card-title fw-bold text-truncate text-primary">ID: {{ orden.id_compra }}</h2>
+                                    <span class="badge bg-secondary-subtle text-secondary py-2 px-3">
+                                        <i class="fa-solid fa-user me-1"></i>Usuario: {{ orden.user.username }}
+                                    </span>
+                                </header>
+
+                                <hr>
+                            
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h5 class="fw-bolder mb-3 text-secondary">Productos comprados</h5>
+
+                                        <ul class="list-group list-group-flush mb-4">
+                                            {% for item in orden.items_orden.all %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center ps-0">
+                                                <div class="text-dark">
+                                                    {{ item.producto.title }}
+                                                    <span class="badge bg-secondary-subtle text-dark ms-2">x{{ item.cantidad }}</span>
+                                                </div>
+
+                                                <small class="text-muted fw-bold">${{ item.total_item|floatformat:2 }}</small>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <p class="card-text text-muted mb-2">Total pago: ${{ orden.subtotal_usd|floatformat:2 }}</p>
+
+                                <div class="d-flex justify-content-between align-items-end mb-3">
+                                    <small class="text-info fw-bold">
+                                        <i class="fa-regular fa-calendar-alt me-1"></i>{{ orden.fecha_orden|date:"d M Y" }}
+                                        <span class="text-muted">a las {{ orden.fecha_orden|date:'H:i' }}</span>
+                                    </small>
+                                    
+                                    {% if orden.imagen_comprobante %}
+                                    <a href="{{ orden.imagen_comprobante.url }}" target="_blank">
+                                        <img src="{{ orden.imagen_comprobante.url }}" alt="Comprobante de Pago {{ orden.id_compra }}" class="img-thumbnail rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                                    </a>
+                                    {% else %}
+                                    <p class="text-danger text-center"><i class="fa-solid fa-triangle-exclamation me-1"></i> Sin Comprobante</p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                                    
+                                    <form method="POST" action="{% url 'orden_aprobar' orden.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fa-solid fa-check-circle me-1"></i> Aprobar
+                                        </button>
+                                    </form>
+
+                                    <form method="POST" action="{% url 'orden_rechazar' orden.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="fa-solid fa-times-circle me-1"></i> Rechazar
+                                        </button>
+                                    </form>
+                                </div>
+                                </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+
+            {% elif ordenes_rechazadas %}
+            <div class="row g-4">
+                {% for orden in ordenes_rechazadas %}
+                    <div class="col-12">
+                        <div class="card shadow-sm {% if sent_view %}border-success{% else %}border-warning{% endif %}">
+                            <div class="card-body"> 
+                                <header class="d-flex justify-content-between align-items-center mb-3">
+                                    <h2 class="card-title fw-bold text-truncate text-primary">ID: {{ orden.id_compra }}</h2>
+                                    <span class="badge bg-secondary-subtle text-secondary py-2 px-3">
+                                        <i class="fa-solid fa-user me-1"></i>Usuario: {{ orden.user.username }}
+                                    </span>
+                                </header>
+
+                                <hr>
+                            
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h5 class="fw-bolder mb-3 text-secondary">Productos comprados</h5>
+
+                                        <ul class="list-group list-group-flush mb-4">
+                                            {% for item in orden.items_orden.all %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center ps-0">
+                                                <div class="text-dark">
+                                                    {{ item.producto.title }}
+                                                    <span class="badge bg-secondary-subtle text-dark ms-2">x{{ item.cantidad }}</span>
+                                                </div>
+
+                                                <small class="text-muted fw-bold">${{ item.total_item|floatformat:2 }}</small>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <p class="card-text text-muted mb-2">Total pago: ${{ orden.subtotal_usd|floatformat:2 }}</p>
+
+                                <div class="d-flex justify-content-between align-items-end mb-3">
+                                    <small class="text-info fw-bold">
+                                        <i class="fa-regular fa-calendar-alt me-1"></i>{{ orden.fecha_orden|date:"d M Y" }}
+                                        <span class="text-muted">a las {{ orden.fecha_orden|date:'H:i' }}</span>
+                                    </small>
+                                    
+                                    {% if orden.imagen_comprobante %}
+                                    <a href="{{ orden.imagen_comprobante.url }}" target="_blank">
+                                        <img src="{{ orden.imagen_comprobante.url }}" alt="Comprobante de Pago {{ orden.id_compra }}" class="img-thumbnail rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                                    </a>
+                                    {% else %}
+                                    <p class="text-danger text-center"><i class="fa-solid fa-triangle-exclamation me-1"></i> Sin Comprobante</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            {% else %}
+            <div class="alert alert-info" role="alert">
+                <i class="fa-solid fa-info-circle me-2"></i> No hay órdenes pendientes de verificación en este momento.
+            </div>
+            {% endif %}
+            
         </div>
     </div>
 </main>

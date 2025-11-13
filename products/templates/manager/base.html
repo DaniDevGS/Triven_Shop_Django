@@ -5,8 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Django Manager Product</title>
-    <link rel="shortcut icon" href="{% static 'img/django-icon-svgrepo-com.svg' %}" type="image/svg">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="shortcut icon" href="{% static 'img/Logo_Triven.png' %}" type="image/png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://kit.fontawesome.com/daf8c554e7.js" crossorigin="anonymous"></script>
     
     <style>
@@ -14,55 +15,71 @@
             background-color: #f8f9fa; /* Color de fondo muy claro (Light) */
         }
         .navbar {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave para la barra */
+            /* Sombra suave para la barra, manteniendo tu estilo */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        }
+        /* Estilo para que los botones sean discretos en el menú principal */
+        .navbar-nav .nav-link.btn {
+            padding: 0.5rem 1rem;
+            margin-top: 5px; /* Espacio entre botones en vista móvil */
+            width: 100%; /* Ocupa todo el ancho en móvil */
+        }
+        @media (min-width: 992px) { /* lg (Desktop) */
+            .navbar-nav .nav-link.btn {
+                width: auto;
+                margin-top: 0;
+            }
         }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-lg">
         <div class="container">
-            <a class="navbar-brand" href="/"><img src="{% static 'img/Logo_Triven.svg' %}" alt="" width="50"></a>
+            <a class="navbar-brand" href="/">
+                <img src="{% static 'img/Logo_Triven.svg' %}" alt="Triven Logo" width="50">
+            </a>
+            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center"> 
+                    
                     <li class="nav-item">
                         <a href="/manager" class="nav-link active"><i class="fa-solid fa-house me-1"></i>Home</a>
                     </li>
+                    <li class="nav-item">
+                        <a href="/manager/products" class="nav-link"><i class="fa-solid fa-box-open me-1"></i>Productos por Enviar</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/manager/products_to_send/" class="nav-link"><i class="fa-solid fa-boxes-stacked me-1"></i>Productos Enviados</a>
+                    </li>
 
-                        <li class="nav-item">
-                            <a href="/manager/products" class="nav-link"><i class="fa-solid fa-box-open me-1"></i>Productos por Enviar</a>
-                        </li>
+                    <li class="nav-item me-lg-2">
+                        <a href="/manager/product/create/" class="nav-link btn btn-success btn-sm ms-lg-2"><i class="fa-solid fa-box me-1"></i>Crear Producto</a>
+                    </li>
 
-                        <li class="nav-item">
-                            <a href="/manager/products_to_send/" class="nav-link"><i class="fa-solid fa-boxes-stacked me-1"></i>Productos Enviados</a>
-                        </li>
+                    <li class="nav-item me-lg-2">
+                        <a href="/manager/pagos_verificar" class="nav-link btn btn-info btn-sm ms-lg-2 text-white"><i class="fa-solid fa-file-import"></i>Pagos por Verificar</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/manager/pagos_aprovados" class="nav-link btn btn-primary btn-sm ms-lg-2"><i class="fa-solid fa-certificate"></i>Pagos Aprobados</a>
+                    </li>
 
-                        <li class="nav-item">
-                            <a href="/manager/product/create/" class="nav-link btn btn-outline-success btn-sm ms-2"><i class="fa-solid fa-box me-1"></i>Crear Producto</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="/manager/pagos_verificados" class="nav-link btn btn-outline-success btn-sm ms-2"><i class="fa-solid fa-file-import"></i>Pagos verificar</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="/manager/pagos_verificados" class="nav-link btn btn-outline-success btn-sm ms-2"><i class="fa-solid fa-certificate"></i>Pagos aprovados</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="/manager/logout" class="nav-link text-danger ms-lg-2"><i class="fa-solid fa-door-open me-1"></i>Cerrar Sesión</a>
-                        </li>
+                    <li class="nav-item">
+                        <a href="/manager/pagos_rechazados" class="nav-link btn btn-primary btn-sm ms-lg-2"><i class="fa-regular fa-circle-xmark"></i>Pagos Rechazados</a>
+                    </li>
+                    
                 </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
     
     {% block content %}
     {% endblock %}
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>

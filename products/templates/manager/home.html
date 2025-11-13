@@ -13,22 +13,13 @@
             </p>
 
             <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
-                {% if user.is_authenticated %}
-                <a class="btn btn-danger btn-lg px-4 shadow-sm" href="/manager/logout/">
-                    <i class="fa-solid fa-door-open me-2"></i>Cerrar Sesión
-                </a>
+                {% if user.is_authenticated and request.user.username in MANAGER_USERNAMES %}
+                
                 <a class="btn btn-primary btn-lg px-4 shadow-sm" href="/manager/products">
                     <i class="fa-solid fa-box-open me-2"></i>Ver Productos
                 </a>
 
-                {% else %}
-                <a class="btn btn-primary btn-lg px-4 me-sm-3 shadow-sm" href="/manager/signup">
-                    <i class="fa-solid fa-user me-2"></i>Iniciar Sesión
-                </a>
-
-                <a class="btn btn-outline-secondary btn-lg px-4 shadow-sm" href="/manager/signup/">
-                    <i class="fa-solid fa-circle-plus me-2"></i>Registrarse
-                </a>
+                <a class="btn btn-info btn-lg px-4 shadow-sm" href="/manager/pagos_verificar"><i class="fa-solid fa-file-import"></i>Pagos por Verificar</a>
                 {% endif %}
             </div>
         </section>

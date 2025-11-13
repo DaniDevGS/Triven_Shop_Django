@@ -10,7 +10,8 @@ class ProductForm(forms.ModelForm):
         # Incluye 'cantidad' en los campos del formulario
         fields = ['imagen','title', 'description', 'price', 'cantidad', 'category']
         widgets = {
-            'imagen': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
+            'imagen': forms.ClearableFileInput(attrs={'class': 'form-control-file',
+                                                      'id': 'input_imagen'}),
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Write a title'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Write a description'}),
             'price': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),

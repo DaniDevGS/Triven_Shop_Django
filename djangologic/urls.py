@@ -35,7 +35,10 @@ urlpatterns = [
     path('carrito/update/<int:producto_id>/', views.update_cart_quantity, name='update_cart_quantity'),
     path('carrito/clear/', views.clear_cart, name='clear_cart'), # Opcional: si creas una vista para vaciar todo
     path('compra', views.compra_productos, name='compra_productos'),
+
+    #=================================VIEWS DE USER======================================================
     path('user_detail', views.user_details, name='user_detail'),
+
     path('tienda/<int:products_id>/', views.products_items, name='products_items'),
 
     #=================================VIEWS DE PRODUCTS Manager======================================================
@@ -48,9 +51,14 @@ urlpatterns = [
     path('manager/products/<int:products_id>/complete', views.sent_product, name='complete_products'), # type: ignore
     path('manager/products/<int:products_id>/delete', views.delete_product, name='delete_products'), # <-- Asegúrate de la coma # type: ignore
     #=================================VIEWS DE PRODUCTS Manager======================================================
-    path('manager/pagos_verificados', views.pagos_verificar, name='pagos_verificados')
+    path('manager/pagos_verificar', views.pagos_verificar, name='pagos_verificar'),
+    path('manager/pagos_aprovados', views.pagos_aprovados, name='pagos_aprovados'),
+    path('manager/pagos_rechazados', views.pagos_rechazados, name='pagos_rechazados'),
+
+    # Rutas de Aprobación/Rechazo (NUEVAS)
+    path('manager/orden/<int:orden_id>/aprobar/', views.orden_aprobar, name='orden_aprobar'),
+    path('manager/orden/<int:orden_id>/rechazar/', views.orden_rechazar, name='orden_rechazar'),
     
-    # {% url 'pagos_verificados' %}
 
 ]
 

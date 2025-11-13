@@ -60,7 +60,9 @@
                             <li class="nav-item">
                                 <a class="nav-link btn btn-outline-primary position-relative d-inline-block" href="{% url 'carrito' %}">
                                     <i class="fa-solid fa-basket-shopping"></i> Carrito
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger numerito">0</span>
+                                    {% if cart_item_count > 0 %}
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger numerito">{{ cart_item_count }}</span>
+                                    {% endif %}
                                 </a>
                             </li>
                         </ul>

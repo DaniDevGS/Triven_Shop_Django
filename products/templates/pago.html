@@ -154,6 +154,27 @@
                 </article>
             </div>
 
+            <div class="card card-body p-4 shadow-lg bg-light border-2 mb-4">
+                <h2 class="text-danger mb-3 fw-bold">Datos del pago</h2>
+                <p class="fw-bold text-dark">Pague a esta cuenta</p>
+                
+                <article class="mb-3 border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">Cedula:</h5>
+                    <p class="mb-0 fw-bold text-dark">V-23016849</p>
+                </article>
+
+                <article class="border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">Numero telefonico</h5>
+                    <p class="mb-0 fw-bold text-dark">0422-5924400</p>
+
+                </article>
+
+                <article class="mt-3 border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">Banco Receptor</h5>
+                    <p class="mb-0 fw-bold text-dark">0102 (Banco de Venezuela)</p>
+                </article>
+            </div>
+
             <form action="" method="POST" enctype="multipart/form-data" class="card card-body p-5 shadow-lg bg-white border-0" id="payment-form">
                 {% csrf_token %}
 

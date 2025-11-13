@@ -210,19 +210,27 @@
 
         <hr>
 
-        <footer class="bg-dark text-white pt-4 pb-2">
+        <footer class="bg-dark text-white pt-4 pb-2 container-fluid">
             <div class="container text-center">
                 <div class="social-media mb-3">
-                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x"></i></a>
-                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x"></i></a>
-                    <a href="#" class="text-white mx-2"><i class="fa-brands fa-facebook fa-2x"></i></a>
-                    <a href="+58 422-5924400" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x"></i></a>
+                    <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x icons-a"></i></a>
+                    <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x icons-a"></i></a>
+                    <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-facebook fa-2x icons-a"></i></a>
+                    <a href="https://wa.me/584225924400" target="_blank" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x icons-a"></i></a>
                 </div>
                 <div class="footer-logo mb-3">
-                    <img src="/products/static/IMG/Logo.jpg" width="100" alt="Logo Trivens">
+                    <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens">
                 </div>
-                <p class="text-muted"><small>&copy; 2025 Trivens Smart Shop. Todos los derechos reservados.</small></p>
+                <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
+                
             </div>
         </footer>
     </div>
+
+<style>
+.icons-a:hover{
+    color: #dc3545;
+    transform: translateY(-4px);
+}
+</style>
 {% endblock %}

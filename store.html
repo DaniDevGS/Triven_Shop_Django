@@ -1,7 +1,3 @@
-Actua como desarrollador FullStack y ayudame a implementar mejor responsividad en celulares pero que no destruya el diseño ya echo. Basicamente no vas a hacer cambios de crear nuevos elementos sino estilizar adecuadamente los elementos para que sean visibles en el celular, no quiero ningun cambio de color.
-
-# products_items.html
-
 {% extends 'base.html' %}
 {% load static %}
 
@@ -12,8 +8,8 @@ Actua como desarrollador FullStack y ayudame a implementar mejor responsividad e
     </a>
 
     <div class="row mb-5">
-        <div class="col-lg-8 col-md-7 mb-4">
-            <div class="d-flex gap-3 h-100">
+        <div class="col-lg-8 col-md-7 mb-4 **mb-md-4**">
+            <div class="d-flex gap-3 h-100 **flex-column flex-md-row**">
                 
                 <div class="d-none d-md-flex flex-column gap-2" style="width: 70px;">
                     {% if producto.imagen %}
@@ -29,26 +25,26 @@ Actua como desarrollador FullStack y ayudame a implementar mejor responsividad e
                     {% endfor %}
                 </div>
 
-                <div class="flex-grow-1 d-flex align-items-center justify-content-center bg-white rounded position-relative" style="min-height: 400px; max-height: 600px;">
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center bg-white rounded position-relative **p-0 p-md-3**" **style="min-height: 300px; max-height: 600px;"**>
                     <img id="mainImage" 
-                         src="{{ producto.imagen.url }}" 
-                         class="img-fluid rounded" 
-                         alt="{{ producto.title }}" 
-                         style="max-height: 500px; width: auto; object-fit: contain;">
+                          src="{{ producto.imagen.url }}" 
+                          class="img-fluid rounded" 
+                          alt="{{ producto.title }}" 
+                          style="max-height: 100%;  width: auto; object-fit: contain;">
                 </div>
             </div>
             
-            <div class="d-flex d-md-none gap-2 overflow-auto mt-3 pb-2">
+            <div class="d-flex d-md-none gap-2 overflow-auto **mt-3** pb-2">
                 {% if producto.imagen %}
-                <img src="{{ producto.imagen.url }}" onclick="changeImage('{{ producto.imagen.url }}', null)" class="rounded border" style="width: 60px; height: 60px; object-fit: cover;">
+                <img src="{{ producto.imagen.url }}" onclick="changeImage('{{ producto.imagen.url }}', null)" class="rounded border **cursor-pointer**" style="width: 60px; height: 60px; object-fit: cover;">
                 {% endif %}
                 {% for img in imagenes_galeria %}
-                <img src="{{ img.imagen.url }}" onclick="changeImage('{{ img.imagen.url }}', null)" class="rounded border" style="width: 60px; height: 60px; object-fit: cover;">
+                <img src="{{ img.imagen.url }}" onclick="changeImage('{{ img.imagen.url }}', null)" class="rounded border **cursor-pointer**" style="width: 60px; height: 60px; object-fit: cover;">
                 {% endfor %}
             </div>
         </div>
 
-        <div class="col-lg-4 col-md-5">
+        <div class="col-lg-4 col-md-5 **mb-4 mb-md-5**">
             <div class="card border-light shadow-sm p-4">
                 <small class="text-muted mb-2 d-block">Nuevo | {{ producto.cantidad }} disponibles</small>
                 
@@ -78,13 +74,13 @@ Actua como desarrollador FullStack y ayudame a implementar mejor responsividad e
                         <label class="form-label fw-bold text-muted" style="font-size: 0.9rem;">Cantidad:</label>
                         <div class="d-flex align-items-center">
                             <input type="number" 
-                                   name="cantidad" 
-                                   id="cantidad-{{ producto.id }}" 
-                                   class="form-control fw-bold me-2" 
-                                   style="width: 80px;"
-                                   value="1" 
-                                   min="1" 
-                                   max="{{ producto.cantidad }}">
+                                        name="cantidad" 
+                                        id="cantidad-{{ producto.id }}" 
+                                        class="form-control fw-bold me-2" 
+                                        style="width: 80px;"
+                                        value="1" 
+                                        min="1" 
+                                        max="{{ producto.cantidad }}">
                             <span class="text-muted small">({{ producto.cantidad }} disponibles)</span>
                         </div>
                     </div>
@@ -121,82 +117,3 @@ Actua como desarrollador FullStack y ayudame a implementar mejor responsividad e
         </div>
     </div>
 </main>
-
-<style>
-    
-    /* Estilos de Galería estilo ML */
-    .thumbnail-container {
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 2px;
-        cursor: pointer;
-        transition: border-color 0.2s;
-    }
-    
-    .thumbnail-container:hover, 
-    .thumbnail-container.active {
-        border-color: #3483fa; /* Azul característico estilo ML */
-        border-width: 2px;
-    }
-
-    .thumbnail-container img {
-        width: 100%;
-        height: 50px; /* Altura fija para uniformidad */
-        object-fit: contain;
-    }
-
-    /* Estilos Descripción */
-    .clamped-text {
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        line-clamp: 8; /* Mostramos un poco más antes de cortar */
-        -webkit-line-clamp: 8;
-        mask-image: linear-gradient(180deg, #000 80%, transparent);
-        -webkit-mask-image: linear-gradient(180deg, #000 80%, transparent);
-    }
-
-    .expanded-text {
-        display: block;
-        mask-image: none;
-        -webkit-mask-image: none;
-    }
-</style>
-
-<script>
-    // Función Galería: Cambiar imagen principal
-    function changeImage(src, element) {
-        // Cambiar src de la imagen grande
-        document.getElementById('mainImage').src = src;
-        
-        // Si es desktop (hay elemento thumbnail), manejar clase activa
-        if (element) {
-            // Quitar clase active de todos
-            const thumbnails = document.querySelectorAll('.thumbnail-container');
-            thumbnails.forEach(thumb => thumb.classList.remove('active'));
-            
-            // Agregar a la actual
-            element.classList.add('active');
-        }
-    }
-
-    // Función Descripción: Expandir/Colapsar
-    function toggleDescription() {
-        const desc = document.getElementById('desc-text');
-        const btn = document.getElementById('btn-ver-mas');
-        
-        if (desc.classList.contains('clamped-text')) {
-            desc.classList.remove('clamped-text');
-            desc.classList.add('expanded-text');
-            btn.innerHTML = 'Ver menos <i class="fa-solid fa-chevron-up ms-1"></i>';
-        } else {
-            desc.classList.add('clamped-text');
-            desc.classList.remove('expanded-text');
-            btn.innerHTML = 'Ver más características <i class="fa-solid fa-chevron-down ms-1"></i>';
-            
-            // Scroll suave hacia el inicio de la descripción
-            desc.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }
-</script>
-{% endblock %}

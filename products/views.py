@@ -686,6 +686,9 @@ def products_items(request, products_id:int):
         pk=products_id, 
         datecompleted__isnull=False # Asegura que solo se muestren productos 'enviados' (a la venta)
     )
+
+    # Recuperamos las imágenes extra usando el related_name 'imagenes_galeria'
+    imagenes_extra = producto.imagenes_galeria.all() # type: ignore
     
     # Aquí puedes añadir la lógica de conversión a Bs. si es necesaria, 
     bolivar_rate = get_exchange_rate()
@@ -700,7 +703,7 @@ def products_items(request, products_id:int):
             producto.price_ves = None # pyright: ignore[reportAttributeAccessIssue]
     # pero para simplificar, la dejaremos solo en la lista por ahora.
     
-    return render(request, 'products_items.html', {'producto': producto, 'bolivar_rate': bolivar_rate})
+    return render(request, 'products_items.html', {'producto': producto, 'bolivar_rate': bolivar_rate,'imagenes_galeria': imagenes_extra })
 
 def signup(request):
     """Gestiona el registro de nuevos usuarios con validaciones extendidas."""

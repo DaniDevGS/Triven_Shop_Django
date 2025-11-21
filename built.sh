@@ -5,10 +5,12 @@ set -o errexit
 # 1. Instalar dependencias
 pip install -r requirements.txt
 
-# 3. Recolectar archivos estáticos
-python manage.py collectstatic --no-input
-
 # 2. **Ejecutar migraciones (CRÍTICO)**
 python manage.py migrate
 
-python manage.py loaddata products_data.json # <-- ¡Esta es la clave!
+# 3. Recolectar archivos estáticos
+python manage.py collectstatic --no-input
+
+# 4. 🔥 PASO TEMPORAL: CARGAR LOS DATOS 🔥
+# ¡Asegúrate de que el nombre del archivo coincida!
+python manage.py loaddata all_data.json

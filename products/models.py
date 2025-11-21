@@ -69,16 +69,34 @@ class OrdenDeCompra(models.Model):
 
 class ItemOrden(models.Model):
     orden = models.ForeignKey(OrdenDeCompra, on_delete=models.CASCADE, related_name='items_orden')
-    # Usar on_delete=models.PROTECT para que no se borre el producto si está en una orden
-    producto = models.ForeignKey(Producto, on_delete=models.PROTECT) 
+    
+    # ----------------------------------------------------
+    # CAMBIO CRÍTICO: Usar SET_NULL y null=True
+    # Si el producto se elimina, el item de la orden se queda, pero el FK es NULL
+    # ----------------------------------------------------
+    producto = models.ForeignKey(
+        'Producto', 
+        on_delete=models.SET_NULL, # Se pone a NULL si Producto es borrado
+        null=True, # Permite que sea NULL
+        blank=True # Permite que sea NULL en formularios
+    )  
+    
+    # CAMPOS DE INSTANTÁNEA (Snapshot): Para que la orden mantenga la información
+    # esencial aunque el producto original se borre.
+    nombre_producto_snapshot = models.CharField(max_length=100, default='Producto Eliminado')
+    descripcion_snapshot = models.TextField(blank=True, null=True)
+    
+    # El resto de campos se mantiene:
     cantidad = models.PositiveIntegerField(default=1)
     precio_unidad = models.DecimalField(max_digits=6, decimal_places=2) # Precio al momento de la compra
     
     def total_item(self):
+        # Asegúrate de usar el precio de la instantánea (precio_unidad)
         return self.precio_unidad * self.cantidad
 
     def __str__(self):
-        return f"{self.cantidad} x {self.producto.title} en Orden {self.orden.id_compra}"
+        # Usamos el nombre de la instantánea para el __str__
+        return f"{self.cantidad} x {self.nombre_producto_snapshot} en Orden {self.orden.id_compra}"
 
 
 # ================================ NUEVOS MODELOS PARA EL CARRITO ================================

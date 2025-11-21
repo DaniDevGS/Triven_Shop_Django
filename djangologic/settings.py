@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,8 +26,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-# DEBUG = 'RENDER' not in os.environ
+# DEBUG = True
+DEBUG = 'RENDER' not in os.environ
 
 ALLOWED_HOSTS = []
 
@@ -97,14 +98,18 @@ DATABASES = {
     #     'NAME': BASE_DIR / 'db.sqlite3',
     # }
 
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'productos_db', # ¡ASEGÚRATE DE QUE NO HAYA CARACTERES ESPECIALES AQUÍ!
-        'USER': 'Daniel',
-        'PASSWORD': '250806YHJS',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    # 'default': {
+        # 'ENGINE': 'django.db.backends.postgresql',
+        # 'NAME': 'productos_db', # ¡ASEGÚRATE DE QUE NO HAYA CARACTERES ESPECIALES AQUÍ!
+        # 'USER': 'Daniel',
+        # 'PASSWORD': '250806YHJS',
+        # 'HOST': 'localhost',
+        # 'PORT': '5432',
+        'default': dj_database_url.config(
+            default='postgresql://postgres:postgres@localhost/postegres',
+            conn_max_age=600
+        )
+    # }
 }
 
 CORS_ALLOWED_ORIGINS = [

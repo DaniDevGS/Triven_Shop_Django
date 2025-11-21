@@ -562,7 +562,7 @@ def compra_productos(request):
                     cantidad_comprada = data.get('cantidad', 1)
                     precio_unidad = Decimal(str(data.get('price', 0.00)))
                     
-                    producto = get_object_or_404(Producto, pk=producto_id)
+                    producto = Producto.objects.select_for_update().get(pk=producto_id)
                     
                     # Validación Final de Stock
                     if producto.cantidad < cantidad_comprada:
@@ -577,7 +577,9 @@ def compra_productos(request):
                         orden=orden,
                         producto=producto,
                         cantidad=cantidad_comprada,
-                        precio_unidad=precio_unidad
+                        precio_unidad=precio_unidad,
+
+                        nombre_producto_snapshot=producto.title,descripcion_snapshot=producto.description,
                     )
                     
                     total_item_usd = precio_unidad * cantidad_comprada

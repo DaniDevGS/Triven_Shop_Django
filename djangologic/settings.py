@@ -105,10 +105,15 @@ DATABASES = {
         # 'PASSWORD': '250806YHJS',
         # 'HOST': 'localhost',
         # 'PORT': '5432',
-        'default': dj_database_url.config(
-            default='postgresql://postgres:postgres@localhost/postegres',
-            conn_max_age=600
-        )
+        # Usamos dj_database_url.config() para leer la URL de conexión.
+    # Si estamos en Render, leerá la variable DATABASE_URL.
+    # Si estamos en local y no está definida, usará el valor 'default'.
+    'default': dj_database_url.config(
+        # Valor predeterminado para el desarrollo local.
+        # En Render, esto será anulado por la variable de entorno.
+        default='postgresql://postgres:postgres@localhost/postgres', 
+        conn_max_age=600
+    )
     # }
 }
 

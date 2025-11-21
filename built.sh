@@ -11,4 +11,4 @@ python manage.py collectstatic --no-input
 # 2. **Ejecutar migraciones (CRÍTICO)**
 python manage.py migrate
 
-python manage.py loaddata products_data.json
+python manage.py loaddata products_data.json # <-- ¡Esta es la clave!

@@ -98,29 +98,19 @@ MEDIA_URL = '/media/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / 'db.sqlite3',
-    # }
-
-    # 'default': {
-        # 'ENGINE': 'django.db.backends.postgresql',
-        # 'NAME': 'productos_db', # ¡ASEGÚRATE DE QUE NO HAYA CARACTERES ESPECIALES AQUÍ!
-        # 'USER': 'Daniel',
-        # 'PASSWORD': '250806YHJS',
-        # 'HOST': 'localhost',
-        # 'PORT': '5432',
-        # Usamos dj_database_url.config() para leer la URL de conexión.
-    # Si estamos en Render, leerá la variable DATABASE_URL.
-    # Si estamos en local y no está definida, usará el valor 'default'.
     'default': dj_database_url.config(
-        # Valor predeterminado para el desarrollo local.
-        # En Render, esto será anulado por la variable de entorno.
-        default='postgresql://postgres:postgres@localhost/postgres', 
-        conn_max_age=600
+        conn_max_age=600,
+        # Si la variable de entorno DATABASE_URL NO EXISTE (local), usa esta URL por defecto.
+        # ADVERTENCIA: Debes cambiar los datos de usuario/contraseña por algo seguro 
+        # y que coincida con tu entorno local.
+        default='postgres://Daniel:250806YHJS@localhost:5432/productos_db', 
+        
+        # O, si usas variables de entorno locales (como en un .env) para la configuración
+        # local, simplemente pasa una URL local válida.
     )
-    # }
 }
+    
+
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5500",

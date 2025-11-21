@@ -1,3 +1,5 @@
+# user_detail.html(panel de usuario)
+
 {% extends 'base.html' %}
 {% load static %}
 
@@ -21,30 +23,66 @@
     /* Estilos de Píldoras de Navegación */
     /* ------------------------------------------- */
     .nav-pills .nav-link {
-        color: #dc3545; /* Color principal (rojo/warning del original) */
+        color: #dc3545;
         border: 1px solid #dc3545;
-        margin: 0 5px 10px 5px; /* Espacio para móvil */
+        margin: 0 5px 10px 5px;
         padding: 10px 20px;
         border-radius: 0.5rem;
+        /* TRANSICIÓN: Aplicada para hover, focus y active */
         transition: all 0.3s ease;
         font-weight: 600;
     }
     .nav-pills .nav-link.active, .nav-pills .nav-link:hover {
         background-color: #dc3545;
         color: white;
+        /* ANIMACIÓN AL INTERACTUAR: Ligero levantamiento */
         transform: translateY(-2px);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 6px 10px rgba(220, 53, 69, 0.4); /* Sombra más definida con el color principal */
     }
 
+    /* ------------------------------------------- */
     /* Estilo de la Hero Card (Perfil) */
-    #Hero-card {
-        background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Gradiente suave */
+    /* ------------------------------------------- */
+    #Hero-profile {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
         border-radius: 1.5rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        border: 2px solid #dc3545; /* Borde sutil del color principal */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Sombra suave */
+        border: 2px solid #dc3545;
+        /* ANIMACIÓN DE ENTRADA: Aparecer y subir suavemente */
+        animation: fadeInSlideUp 0.8s ease-out 0.2s backwards;
+    }
+    
+    /* Efecto de hover en los botones de la Hero Card */
+    #Hero-profile .btn {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    #Hero-profile .btn:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 
+
+    /* ------------------------------------------- */
     /* Estilo para las tarjetas de órdenes (más visuales) */
+    /* ------------------------------------------- */
+    .order-card {
+        transition: box-shadow 0.3s ease, transform 0.3s ease;
+        /* Animación de entrada con un retraso para cada sección */
+        opacity: 0;
+        animation: fadeInSlideUp 0.7s ease-out forwards;
+    }
+
+    /* Retraso de animación para cada sección de órdenes */
+    #Orders-pending .order-card { animation-delay: 0.5s; }
+    #Orders-approved .order-card { animation-delay: 0.7s; }
+    #Orders-rejected .order-card { animation-delay: 0.9s; }
+    
+    .order-card:hover {
+        /* EFECTO DE HOVER: Elevar la tarjeta */
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
+        transform: translateY(-5px);
+    }
+
     .order-card-pending { border-left: 5px solid #ffc107; } /* Warning */
     .order-card-approved { border-left: 5px solid #198754; } /* Success */
     .order-card-rejected { border-left: 5px solid #dc3545; } /* Danger */
@@ -62,9 +100,27 @@
     .order-card .product-item:last-child {
         border-bottom: none;
     }
+    
+    /* Transición de los iconos en el footer */
+    .icons-a {
+        display: inline-block; /* Necesario para que funcione la transformación */
+        transition: color 0.3s ease, transform 0.3s ease;
+    }
     .icons-a:hover {
-        color: #dc3545;
-        transform: translateY(-4px);
+        color: #dc3545 !important; /* Usamos !important para asegurar el override */
+        transform: translateY(-4px) scale(1.1); /* Ligero levantamiento y agrandamiento */
+    }
+
+    /* Animación de entrada para el título principal y la barra de navegación */
+    .container > h1 {
+        animation: fadeInSlideUp 0.6s ease-out backwards;
+    }
+    .container > p {
+        animation: fadeInSlideUp 0.7s ease-out backwards;
+    }
+    header.mb-5 {
+        animation: fadeInSlideUp 0.8s ease-out backwards;
+        animation-delay: 0.2s; /* Ligeramente después del Hero Card */
     }
 
     /* Para que el smooth scroll funcione bien */
@@ -79,11 +135,10 @@
     <h1 class="text-center mb-2 text-dark fw-bolder">Panel de Usuario</h1>
     <p class="text-center text-muted mb-5">Bienvenido, aquí puedes gestionar tus compras y ver el estado de tus órdenes.</p>
 
-    <!--============================= HERO CARD (PERFIL) ================================================-->
     <section class="card mb-5" id="Hero-profile">
         <div class="card-body p-4 p-md-5 d-flex flex-column flex-md-row align-items-center justify-content-between">
             <div class="text-center text-md-start mb-4 mb-md-0">
-                <i class="fa-solid fa-circle-user fa-5x text-danger mb-3"></i>
+                <i class="fa-solid fa-circle-user fa-5x text-danger mb-3" style="animation: pulse-icon 1.5s infinite alternate;"></i> 
                 <h2 class="card-title fw-bolder mb-1 display-5 text-dark">{{ username }}</h2>
                 <span class="text-muted fw-light">Usuario activo en el sistema.</span>
             </div>
@@ -92,26 +147,24 @@
                 <a href="#Orders-pending" class="btn btn-primary fw-bold btn-lg">
                     <i class="fa-solid fa-cart-shopping me-2"></i>Ver Mis Órdenes
                 </a>
-                <a href="{% url 'logout' %}" class="btn btn-outline-danger fw-bold">
+                <a href="logout/" class="btn btn-outline-danger fw-bold">
                     <i class="fa-solid fa-door-open me-2"></i>Cerrar Sesión
                 </a>
             </div>
         </div>
     </section>
-
+    
     <style>
-        @keyframes pulse-icon{
-            0% {opacity: 0.8; transform: scale(1); }
-            100% {opacity: 1; transform: scale(1.05); }
+        @keyframes pulse-icon {
+            0% { opacity: 0.8; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.05); }
         }
     </style>
 
     <hr class="my-5">
 
-    <!--============================= BARRA DE NAVEGACIÓN (FUNCIONALIDAD SCROLL) ================================================-->
     <header class="mb-5">
         <nav>
-            <!-- He actualizado los hrefs para que coincidan con las nuevas IDs de las secciones -->
             <ul class="nav nav-pills justify-content-center flex-column flex-sm-row" id="pills-tab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <a class="nav-link active scroll-link" data-target="#Hero-profile" href="#Hero-profile">
@@ -137,8 +190,6 @@
         </nav>
     </header>
 
-    <!--============================= PRODUCTOS POR VERIFICAR (PENDIENTE) ================================================-->
-    <!-- ID de sección actualizada a Orders-pending -->
     <section id="Orders-pending" class="mb-5">
         <h2 class="mb-4 text-warning fw-bold"><i class="fa-solid fa-clock-rotate-left me-2"></i>Órdenes Pendientes de Verificación</h2>
 
@@ -146,7 +197,6 @@
             <div class="row g-4">
                 {% for orden in ordenes_pendientes %}
                     <div class="col-12">
-                        <!-- Estilo de tarjeta mejorado para Pendiente -->
                         <div class="card shadow order-card order-card-pending">
                             <div class="card-body p-4">
                                 <header class="d-flex justify-content-between align-items-start mb-3">
@@ -163,7 +213,6 @@
                                 <div class="row g-3">
                                     <div class="col-md-8">
                                         <h5 class="fw-bolder mb-3 text-secondary">Detalle de Productos:</h5>
-                                        <!-- Diseño de lista mejorado -->
                                         <ul class="list-group list-group-flush mb-4">
                                             {% for item in orden.items_orden.all %}
                                             <li class="list-group-item d-flex justify-content-between align-items-center px-0 product-item">
@@ -186,7 +235,6 @@
                                         <p class="text-muted mb-1"><i class="fa-regular fa-calendar-alt me-1"></i> Fecha: {{ orden.fecha_orden|date:"d M Y" }}</p>
                                         <p class="text-muted mb-3"><i class="fa-regular fa-clock me-1"></i> Hora: {{ orden.fecha_orden|date:'H:i' }}</p>
 
-                                        <!-- Comprobante visual más destacado -->
                                         {% if orden.imagen_comprobante %}
                                         <p class="fw-bold mb-2">Comprobante:</p>
                                         <a href="{{ orden.imagen_comprobante.url }}" target="_blank" class="d-block position-relative">
@@ -206,12 +254,10 @@
                 {% endfor %}
             </div>
         {% else %}
-        <div class="alert alert-info text-center shadow-sm">No tienes órdenes pendientes de verificación.</div>
+        <div class="alert alert-info text-center shadow-sm" style="animation: fadeInSlideUp 0.7s ease-out backwards; animation-delay: 0.5s;">No tienes órdenes pendientes de verificación.</div>
         {% endif %}
     </section>
 
-    <!--============================= PRODUCTOS APROBADOS ================================================-->
-    <!-- ID de sección actualizada a Orders-approved -->
     <section id="Orders-approved" class="mb-5">
         <h2 class="mb-4 text-success fw-bold"><i class="fa-solid fa-check-circle me-2"></i>Órdenes Aprobadas</h2>
 
@@ -219,7 +265,6 @@
             <div class="row g-4">
                 {% for orden in ordenes_aprobadas %}
                     <div class="col-12">
-                        <!-- Estilo de tarjeta mejorado para Aprobado -->
                         <div class="card shadow order-card order-card-approved">
                             <div class="card-body p-4">
                                 <header class="d-flex justify-content-between align-items-start mb-3">
@@ -273,12 +318,10 @@
                 {% endfor %}
             </div>
         {% else %}
-        <div class="alert alert-info text-center shadow-sm">No tienes órdenes Aprobadas.</div>
+        <div class="alert alert-info text-center shadow-sm" style="animation: fadeInSlideUp 0.7s ease-out backwards; animation-delay: 0.7s;">No tienes órdenes Aprobadas.</div>
         {% endif %}
     </section>
 
-    <!--============================= PRODUCTOS RECHAZADOS ================================================-->
-    <!-- ID de sección actualizada a Orders-rejected -->
     <section id="Orders-rejected" class="mb-5">
         <h2 class="mb-4 text-danger fw-bold"><i class="fa-solid fa-ban me-2"></i>Pagos Rechazados</h2>
 
@@ -286,7 +329,6 @@
             <div class="row g-4">
                 {% for orden in ordenes_rechazadas %}
                     <div class="col-12">
-                        <!-- Estilo de tarjeta mejorado para Rechazado -->
                         <div class="card shadow order-card order-card-rejected">
                             <div class="card-body p-4">
                                 <header class="d-flex justify-content-between align-items-start mb-3">
@@ -351,7 +393,6 @@
 </main>
 
 
-<!-- =======================================================FOOTER DE CONTACTOS (SIN CAMBIOS) ========================================================================== -->
 <footer class="bg-dark text-white pt-4 pb-2 container-fluid">
     <div class="container text-center">
         <div class="social-media mb-3">
@@ -361,7 +402,6 @@
             <a href="https://wa.me/584225924400" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-whatsapp fa-2x"></i></a>
         </div>
         <div class="footer-logo mb-3">
-            <!-- Asumiendo que esta es una URL estática de Django -->
             <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens">
         </div>
         <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
@@ -369,7 +409,6 @@
     </div>
 </footer>
 
-<!-- JavaScript para Smooth Scroll y Activación de Botones -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const scrollLinks = document.querySelectorAll('.scroll-link');

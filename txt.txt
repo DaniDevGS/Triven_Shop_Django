@@ -1,389 +1,344 @@
-Actua como desarrollador Full Stack, ayudame a hacer que cuando un manager le de al boton rechazar o aprobar este abra un input de texto en donde el manager escribira texto por ejemplo porque un pago fue rechazado o si es aprovado en cuanto tiempo llegara su pedido.
+Actua como desarrollador FullStack y ayudame a mejorar la responsividad y el UX en celualar en la pagina de tienda.html. En la pagina products_items.html necesito solamente que cuando toques el p de description este se abra y muestre toda la descripcion.
 
-products/views.py
-
-def pagos_verificar(request):
-    # ...
-    ordenes_pendientes = OrdenDeCompra.objects.filter(estado='PENDIENTE').order_by('-fecha_orden')
-    
-    context = {
-        'ordenes_pendientes': ordenes_pendientes,
-        'sent_view': False # Indica que estamos en la vista de pendientes
-    }
-    return render(request, 'manager/pagos_verificar.html', context)
-
-
-def pagos_aprovados(request):
-    # ...
-    ordenes_aprovadas = OrdenDeCompra.objects.filter(estado='APROBADA').order_by('-fecha_orden')
-    
-    context = {
-        'ordenes_aprovadas': ordenes_aprovadas, # Las órdenes aprobadas
-        'sent_view': True # Indica que estamos en la vista de aprobadas
-    }
-    return render(request, 'manager/pagos_verificar.html', context)
-
-def pagos_rechazados(request):
-    ordenes_rechazadas = OrdenDeCompra.objects.filter(estado='RECHAZADA').order_by('-fecha_orden')
-
-    context = {
-        'ordenes_rechazadas': ordenes_rechazadas,
-        'orden_rechazar': True
-    }
-    return render(request, 'manager/pagos_verificar.html', context)
-    
-
-@login_required
-@require_POST # Se recomienda usar POST para cambios de estado
-def orden_aprobar(request, orden_id):
-    """Marca una OrdenDeCompra como APROBADA y guarda la nota del manager."""
-    orden = get_object_or_404(OrdenDeCompra, pk=orden_id)
-    
-    # 1. Obtener la nota del manager del POST
-    nota_manager = request.POST.get('nota_manager', '').strip()
-    
-    # Solo se puede aprobar si está PENDIENTE
-    if orden.estado == 'PENDIENTE':
-        # 2. Guardar el estado y la nota
-        orden.estado = 'APROBADA'
-        orden.nota_manager = nota_manager # Guardamos la nota
-        orden.save()
-        messages.success(request, f"La orden ID **{orden.id_compra}** ha sido APROBADA. Nota: {nota_manager[:50]}...")
-    else:
-        messages.error(request, f"La orden ID **{orden.id_compra}** ya está en estado {orden.estado}.")
-        
-    return redirect('pagos_verificar')
-
-@login_required
-@require_POST # Se recomienda usar POST para cambios de estado
-def orden_rechazar(request, orden_id):
-    """Marca una OrdenDeCompra como RECHAZADA, revierte el stock y guarda la nota."""
-    orden = get_object_or_404(OrdenDeCompra, pk=orden_id)
-
-    # 1. Obtener la nota del manager del POST
-    nota_manager = request.POST.get('nota_manager', '').strip()
-    
-    if orden.estado == 'PENDIENTE':
-        try:
-            with transaction.atomic():
-                # 2. Cambiar estado a RECHAZADA y guardar la nota
-                orden.estado = 'RECHAZADA'
-                orden.nota_manager = nota_manager # Guardamos la nota
-                orden.save()
-                
-                # 3. Revertir el stock de todos los productos
-                for item in orden.items_orden.all(): # type: ignore
-                    producto = item.producto
-                    producto.cantidad += item.cantidad # Devolver la cantidad al stock
-                    producto.save()
-                    
-                messages.warning(request, f"La orden ID **{orden.id_compra}** ha sido RECHAZADA y el stock ha sido revertido. Razón: {nota_manager[:50]}...")
-                
-        except Exception as e:
-            messages.error(request, f"Error al rechazar la orden y revertir stock: {str(e)}")
-    else:
-        messages.error(request, f"La orden ID **{orden.id_compra}** no puede ser rechazada. Estado actual: {orden.estado}.")
-    
-    return redirect('pagos_verificar')
-
-
-
-products/templates/manager/pagos_verificar.html
-
-{% extends 'manager/base.html' %}
+# tienda.html
+{% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<main class="container py-5">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            {% if sent_view %}
-            <h1 class="text-center display-4 fw-bold text-success mb-5"><i class="fa-solid fa-certificate"></i>Pagos aprovados</h1>
-            {% elif orden_rechazar %}
-            <h1 class="text-center display-4 fw-bold text-danger mb-5"><i class="fa-regular fa-circle-xmark"></i>Pagos rechazados</h1>
-            {% else %}
-            <h1 class="text-center display-4 fw-bold text-info mb-5"><i class="fa-solid fa-file-import"></i>Pagos verificar</h1>
-            {% endif %}
-
-            {% if ordenes_pendientes %}
-            <div class="row g-4">
-                {% for orden in ordenes_pendientes %}
-                    <div class="col-12">
-                        <div class="card shadow-sm {% if sent_view %}border-success{% else %}border-warning{% endif %}">
-                            <div class="card-body"> 
-                                <header class="d-flex justify-content-between align-items-center mb-3">
-                                    <h2 class="card-title fw-bold text-truncate text-primary">ID: {{ orden.id_compra }}</h2>
-                                    <span class="badge bg-secondary-subtle text-secondary py-2 px-3">
-                                        <i class="fa-solid fa-user me-1"></i>Usuario: {{ orden.user.username }}
-                                    </span>
-                                </header>
-
-                                <hr>
+        <main class="py-5 bg-light">
+            <div class="container">
+                <h1 class="mb-5 fw-bold text-center text-warning">Explora Todos Nuestros Productos</h1>
+                <div class="row">
+                    <div class="col-lg-3 mb-4">
+                        <div class="card shadow-lg sticky-top" style="top: 80px;">
                             
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <h5 class="fw-bolder mb-3 text-secondary">Productos comprados</h5>
-
-                                        <ul class="list-group list-group-flush mb-4">
-                                            {% for item in orden.items_orden.all %}
-                                            <li class="list-group-item d-flex justify-content-between align-items-center ps-0">
-                                                <div class="text-dark">
-                                                    {{ item.producto.title }}
-                                                    <span class="badge bg-secondary-subtle text-dark ms-2">x{{ item.cantidad }}</span>
-                                                </div>
-
-                                                <small class="text-muted fw-bold">${{ item.total_item|floatformat:2 }}</small>
-                                            </li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <p class="card-text text-muted mb-2">Total pago: ${{ orden.subtotal_usd|floatformat:2 }}</p>
-
-                                <div class="d-flex justify-content-between align-items-end mb-3">
-                                    <small class="text-info fw-bold">
-                                        <i class="fa-regular fa-calendar-alt me-1"></i>{{ orden.fecha_orden|date:"d M Y" }}
-                                        <span class="text-muted">a las {{ orden.fecha_orden|date:'H:i' }}</span>
-                                    </small>
+                            <div class="card-header bg-danger text-white fw-bold">
+                                <i class="fa-solid fa-filter me-2"></i>Filtros de Búsqueda
+                            </div>
+                            <div class="card-body">
+                                
+                                <!-- ==================================================CATEGORIAS=========================================================== -->
+                                
                                     
-                                    {% if orden.imagen_comprobante %}
-                                    <a href="{{ orden.imagen_comprobante.url }}" target="_blank">
-                                        <img src="{{ orden.imagen_comprobante.url }}" alt="Comprobante de Pago {{ orden.id_compra }}" class="img-thumbnail rounded" style="width: 80px; height: 80px; object-fit: cover;">
-                                    </a>
-                                    {% else %}
-                                    <p class="text-danger text-center"><i class="fa-solid fa-triangle-exclamation me-1"></i> Sin Comprobante</p>
-                                    {% endif %}
+                                <div class="mb-4 pb-2 border-bottom">
+                                    <h5 class="fw-bold text-dark mb-3">Categorías</h5>
+                                    <ul class="list-unstyled small">
+                                        <li><a href="{% url 'tienda' %}?min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}" class="text-decoration-none d-block py-1 
+                                                {% if not current_category %}text-warning fw-bold{% else %}text-muted{% endif %}">Todas las categorías</a></li>
+                                        {% for codigo, nombre in categorias %}
+                                        <li><a href="?category={{ codigo }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}" class="text-decoration-none d-block py-1 {% if current_category == codigo %}text-warning fw-bold{% else %}text-muted{% endif %}">{{ nombre }}</a></li>
+                                        {% endfor %}
+                                    </ul>
                                 </div>
+                                <!-- =============================================================================================================================== -->
 
-                                <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                                    
-                                    <form method="POST" action="{% url 'orden_aprobar' orden.id %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="fa-solid fa-check-circle me-1"></i> Aprobar
-                                        </button>
-                                    </form>
+                                <!-- =========================================================RANGO PRECIO=========================================================== -->
+                                <div class="mb-4 pb-2 border-bottom">
+                                    <h5 class="fw-bold text-dark mb-3">Rango de Precio</h5>
+                                    <form method="GET" action="{% url 'tienda' %}">
+                                        {% if current_category %}
+                                            <input type="hidden" name="category" value="{{ current_category }}">
+                                        {% endif %}
 
-                                    <form method="POST" action="{% url 'orden_rechazar' orden.id %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-danger">
-                                            <i class="fa-solid fa-times-circle me-1"></i> Rechazar
-                                        </button>
+                                        <div class="mb-3">
+                                            <label for="min_price" class="form-label small text-danger">Precio Mínimo ($)</label>
+                                            <input type="number" name="min_price" id="min_price" class="form-control form-control-sm text-warning" 
+                                                   value="{{ min_price|default:'0' }}" min="0" step="1">
+                                        </div>
+
+                                        <div class="col">
+                                            <label for="max_price" class="form-label small text-danger">Precio Máximo ($)</label>
+                                            <input type="number"
+                                            name="max_price" id="max_price" class="form-control form-control-sm  text-warning" 
+                                                   value="{{ max_price|default:'1500' }}" min="0" step="1">
+                                        </div>
+
+                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100 mt-1">Aplicar Filtro</button>
                                     </form>
                                 </div>
-                                </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-
-            {% elif ordenes_aprovadas %}
-            <div class="row g-4">
-                {% for orden in ordenes_aprovadas %}
-                    <div class="col-12">
-                        <div class="card shadow-sm {% if sent_view %}border-success{% else %}border-warning{% endif %}">
-                            <div class="card-body"> 
-                                <header class="d-flex justify-content-between align-items-center mb-3">
-                                    <h2 class="card-title fw-bold text-truncate text-primary">ID: {{ orden.id_compra }}</h2>
-                                    <span class="badge bg-secondary-subtle text-secondary py-2 px-3">
-                                        <i class="fa-solid fa-user me-1"></i>Usuario: {{ orden.user.username }}
-                                    </span>
-                                </header>
-
-                                <hr>
-                            
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <h5 class="fw-bolder mb-3 text-secondary">Productos comprados</h5>
-
-                                        <ul class="list-group list-group-flush mb-4">
-                                            {% for item in orden.items_orden.all %}
-                                            <li class="list-group-item d-flex justify-content-between align-items-center ps-0">
-                                                <div class="text-dark">
-                                                    {{ item.producto.title }}
-                                                    <span class="badge bg-secondary-subtle text-dark ms-2">x{{ item.cantidad }}</span>
-                                                </div>
-
-                                                <small class="text-muted fw-bold">${{ item.total_item|floatformat:2 }}</small>
-                                            </li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <p class="card-text text-muted mb-2">Total pago: ${{ orden.subtotal_usd|floatformat:2 }}</p>
-
-                                <div class="d-flex justify-content-between align-items-end mb-3">
-                                    <small class="text-info fw-bold">
-                                        <i class="fa-regular fa-calendar-alt me-1"></i>{{ orden.fecha_orden|date:"d M Y" }}
-                                        <span class="text-muted">a las {{ orden.fecha_orden|date:'H:i' }}</span>
-                                    </small>
-                                    
-                                    {% if orden.imagen_comprobante %}
-                                    <a href="{{ orden.imagen_comprobante.url }}" target="_blank">
-                                        <img src="{{ orden.imagen_comprobante.url }}" alt="Comprobante de Pago {{ orden.id_compra }}" class="img-thumbnail rounded" style="width: 80px; height: 80px; object-fit: cover;">
-                                    </a>
-                                    {% else %}
-                                    <p class="text-danger text-center"><i class="fa-solid fa-triangle-exclamation me-1"></i> Sin Comprobante</p>
-                                    {% endif %}
-                                </div>
-
-                                <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                                    
-                                    <form method="POST" action="{% url 'orden_aprobar' orden.id %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="fa-solid fa-check-circle me-1"></i> Aprobar
-                                        </button>
-                                    </form>
-
-                                    <form method="POST" action="{% url 'orden_rechazar' orden.id %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-danger">
-                                            <i class="fa-solid fa-times-circle me-1"></i> Rechazar
-                                        </button>
-                                    </form>
-                                </div>
-                                </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-
-
-            {% elif ordenes_rechazadas %}
-            <div class="row g-4">
-                {% for orden in ordenes_rechazadas %}
-                    <div class="col-12">
-                        <div class="card shadow-sm {% if sent_view %}border-success{% else %}border-warning{% endif %}">
-                            <div class="card-body"> 
-                                <header class="d-flex justify-content-between align-items-center mb-3">
-                                    <h2 class="card-title fw-bold text-truncate text-primary">ID: {{ orden.id_compra }}</h2>
-                                    <span class="badge bg-secondary-subtle text-secondary py-2 px-3">
-                                        <i class="fa-solid fa-user me-1"></i>Usuario: {{ orden.user.username }}
-                                    </span>
-                                </header>
-
-                                <hr>
-                            
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <h5 class="fw-bolder mb-3 text-secondary">Productos comprados</h5>
-
-                                        <ul class="list-group list-group-flush mb-4">
-                                            {% for item in orden.items_orden.all %}
-                                            <li class="list-group-item d-flex justify-content-between align-items-center ps-0">
-                                                <div class="text-dark">
-                                                    {{ item.producto.title }}
-                                                    <span class="badge bg-secondary-subtle text-dark ms-2">x{{ item.cantidad }}</span>
-                                                </div>
-
-                                                <small class="text-muted fw-bold">${{ item.total_item|floatformat:2 }}</small>
-                                            </li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <p class="card-text text-muted mb-2">Total pago: ${{ orden.subtotal_usd|floatformat:2 }}</p>
-
-                                <div class="d-flex justify-content-between align-items-end mb-3">
-                                    <small class="text-info fw-bold">
-                                        <i class="fa-regular fa-calendar-alt me-1"></i>{{ orden.fecha_orden|date:"d M Y" }}
-                                        <span class="text-muted">a las {{ orden.fecha_orden|date:'H:i' }}</span>
-                                    </small>
-                                    
-                                    {% if orden.imagen_comprobante %}
-                                    <a href="{{ orden.imagen_comprobante.url }}" target="_blank">
-                                        <img src="{{ orden.imagen_comprobante.url }}" alt="Comprobante de Pago {{ orden.id_compra }}" class="img-thumbnail rounded" style="width: 80px; height: 80px; object-fit: cover;">
-                                    </a>
-                                    {% else %}
-                                    <p class="text-danger text-center"><i class="fa-solid fa-triangle-exclamation me-1"></i> Sin Comprobante</p>
-                                    {% endif %}
-                                </div>
+                                <!-- =============================================================================================================================== -->
+                                <!-- =============================================================================================================================== -->
                             </div>
                         </div>
                     </div>
-                {% endfor %}
+
+                    <div class="col-lg-9">
+
+                        <div class="mb-4">
+                            <form method="GET" action="{% url 'tienda' %}" class="input-group input-group-lg shadow-sm border border-danger rounded-pill overflow-hidden">
+                                
+                                {% if current_category %}
+                                    <input type="hidden" name="category" value="{{ current_category }}">
+                                {% endif %}
+                                {% if min_price %}
+                                    <input type="hidden" name="min_price" value="{{ min_price }}">
+                                {% endif %}
+                                {% if max_price %}
+                                    <input type="hidden" name="max_price" value="{{ max_price }}">
+                                {% endif %}
+
+                                <input type="text" 
+                                    name="q" 
+                                    class="form-control border-0 p-3 text-dark fw-bold" 
+                                    placeholder="Busca productos"
+                                    aria-label="Término de búsqueda"
+                                    value="{{ search_query|default:'' }}">
+                                
+                                <button class="btn btn-danger px-4" type="submit" id="button-addon2">
+                                    <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- =========================================================MOSTRAR PRODUCTOS=========================================================== -->
+                        <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border border-info">
+                            <p class="mb-0 text-muted small">Mostrando {{ cantidad }} productos disponibles</p>
+                        </div>
+                        <!-- ======================================================================================================================================= -->
+
+                        <!-- =========================================================PRODUCTOS CONTENEDOR=========================================================== -->
+                        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-3 g-4 articles-products">
+                            <!-- =========================================================PRODUCTOS=========================================================== -->
+                        {% for producto in productos %}
+                            {% if user.is_authenticated %}     
+                            <div class="col">
+                                <a href="{% url 'products_items' producto.id %}" class="text-decoration-none text-dark d-block h-100">
+                                    <div class="card h-100 shadow-lg products hover-shadow-lg">
+                                        <img src="{{ producto.imagen.url }}" class="card-img-top products-img" alt="{{ producto.title }}" style="height: 250px; object-fit: cover;">
+                                        <div class="card-body d-flex flex-column products-info">
+                                            <h5 class="card-title product-title">{{ producto.title }}</h5>
+                                            <p class="card-text product-description flex-grow-1">{{ producto.description|truncatewords:20 }}</p>
+                                            <span class="fs-4 fw-bold text-success price">{{ producto.price }}$</span>
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                
+                                                <span class="fs-4 fw-bold text-warning price-bolivar">({{ producto.price_ves|floatformat:2 }}Bs)</span>
+                                            </div>
+                                            <!-- <form method="POST" action="{% url 'add_to_cart' %}" class="mt-3">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="producto_id" value="{{ producto.id }}">
+                                                
+                                                <div class="input-group input-group-sm mb-2">
+                                                    <label class="input-group-text small bg-light" for="cantidad-{{ producto.id }}">Cant.</label>
+                                                    <input type="number" 
+                                                            name="cantidad" 
+                                                            id="cantidad-{{ producto.id }}" 
+                                                            class="form-control" 
+                                                            value="1" 
+                                                            min="1" 
+                                                            max="{{ producto.cantidad }}" 
+                                                            style="max-width: 70px;">
+                                    
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="fa-solid fa-cart-plus me-1"></i>Añadir
+                                                    </button>
+                                                </div>
+                                            </form> -->
+                                            
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            {% else %}
+                            <div class="col">
+                                <a href="{% url 'signup' %}" class="text-decoration-none text-dark d-block h-100">
+                                    <div class="card h-100 shadow-lg products hover-shadow-lg">
+                                        <img src="{{ producto.imagen.url }}" class="card-img-top products-img" alt="{{ producto.title }}" style="height: 250px; object-fit: cover;">
+                                        <div class="card-body d-flex flex-column products-info">
+                                            <h5 class="card-title product-title">{{ producto.title }}</h5>
+                                            <p class="card-text product-description flex-grow-1 producto_descripcion">{{ producto.description }}</p>
+                                            <span class="fs-4 fw-bold text-success price">{{ producto.price }}$</span>
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                
+                                                <span class="fs-4 fw-bold text-warning price-bolivar">({{ producto.price_ves|floatformat:2 }}Bs)</span>
+                                            </div>
+                                            <form method="POST" action="{% url 'add_to_cart' %}" class="mt-3">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="producto_id" value="{{ producto.id }}">
+                                                
+                                                <div class="input-group input-group-sm mb-2">
+                                                    <label class="input-group-text small bg-light" for="cantidad-{{ producto.id }}">Cant.</label>
+                                                    <input type="number" 
+                                           name="cantidad" 
+                                           id="cantidad-{{ producto.id }}" 
+                                           class="form-control" 
+                                           value="1" 
+                                           min="1" 
+                                           max="99" 
+                                           style="max-width: 70px;">
+                                    
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="fa-solid fa-cart-plus me-1"></i>Añadir
+                                                    </button>
+                                                </div>
+                                            </form>
+                                            
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            {% endif %}
+                        {% endfor %}
+
+                            <!-- ==================================================================================================================================== -->
+                        <!-- ======================================================================================================================================== -->
+                        </div>
+                        
+                    </div>
+                    </div>
             </div>
+        </main>
+
+        <footer class="bg-dark text-white pt-4 pb-2 container-fluid">
+            <div class="container text-center">
+                <div class="social-media mb-3">
+                    <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x icons-a"></i></a>
+                    <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x icons-a"></i></a>
+                    <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-facebook fa-2x icons-a"></i></a>
+                    <a href="https://wa.me/584225924400" target="_blank" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x icons-a"></i></a>
+                </div>
+                <div class="footer-logo mb-3">
+                    <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens">
+                </div>
+                <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
+                
+            </div>
+        </footer>
+<style>
+    .producto_descripcion{
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        line-clamp: 5;
+        -webkit-line-clamp: 3;
+    }
+
+    .icons-a:hover{
+        color: #dc3545;
+        transform: translateY(-4px);
+    }
+    /* Animación de interacción para las tarjetas de producto */
+    .products {
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+    .products:hover {
+        transform: translateY(-5px) scale(1.01); /* Ligeramente se levanta y agranda */
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1); /* Sombra que simula elevación */
+        border: 1px solid #dc3545; /* Resalta el borde para mejor indicación */
+    }
+
+    /* Animación de hover para los enlaces de categorías en el filtro */
+    .list-unstyled a {
+        transition: color 0.2s ease, padding-left 0.2s ease;
+        position: relative;
+        padding-left: 10px;
+    }
+    .list-unstyled a:hover {
+        color: #dc3545 !important; /* Rojo al pasar el ratón */
+        padding-left: 15px; /* Pequeño deslizamiento a la derecha */
+    }
+    .list-unstyled a:hover::before {
+        content: '•';
+        position: absolute;
+        left: 0;
+        color: #dc3545;
+    }
+    /* Estilo del botón de búsqueda al hacer hover */
+    #button-addon2 {
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    #button-addon2:hover {
+        background-color: #c82333; /* Rojo más oscuro */
+        transform: scale(1.02);
+    }
+</style>
+{% endblock %}
+
+# products_items.html
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<main class="container my-4">
+    <div class="row">
+        
+        <div class="col-lg-5 col-md-6 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <img src="{{ producto.imagen.url }}" 
+                         class="img-fluid rounded-start" 
+                         alt="{{ producto.title }}" 
+                         style="max-height: 450px; width: 100%; object-fit: contain;">
+                </div>
+            </div>
+            </div>
+
+        <div class="col-lg-7 col-md-6">
             
-            {% else %}
-            <div class="alert alert-info" role="alert">
-                <i class="fa-solid fa-info-circle me-2"></i> No hay órdenes pendientes de verificación en este momento.
+            <div class="mb-4 p-3 border rounded shadow-sm">
+                <h1 class="fs-4 fw-bold text-wrap mb-2">
+                    {{ producto.title }}
+                </h1>
+                
+                
+
+                <p class="card-text product-description text-muted small mt-3">
+                    {{ producto.description|truncatewords:50 }}
+                </p>
             </div>
-            {% endif %}
+
+            <div class="card shadow-lg p-3 border-0 bg-light">
+                
+                <span class="d-block fs-2 fw-bold text-success mb-1">
+                    ${{ producto.price|floatformat:2 }}
+                </span>
+                
+                <span class="d-block fs-5 fw-normal text-warning mb-3">
+                    ({{ producto.price_ves|floatformat:2 }} Bs)
+                </span>
+                
+                <div class="mb-3 border-top pt-3">
+                    <p class="small text-success mb-1 fw-bold">Envío gratis</p>
+                    <!-- <p class="small text-info mb-0 fw-bold">Hasta 12 cuotas sin interés</p> -->
+                </div>
+                
+                <form method="POST" action="{% url 'add_to_cart' %}" class="mt-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="producto_id" value="{{ producto.id }}">
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <label class="form-label small me-3 fw-bold" for="cantidad-{{ producto.id }}">Cantidad:</label>
+                        <input type="number" 
+                               name="cantidad" 
+                               id="cantidad-{{ producto.id }}" 
+                               class="form-control form-control-sm me-3" 
+                               value="1" 
+                               min="1" 
+                               max="{{ producto.cantidad }}" 
+                               style="max-width: 80px;">
+                        <span class="small text-muted">({{ producto.cantidad }} disponibles)</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'tienda' %}" class="btn btn-warning btn-lg fw-bold rounded-3">
+                            <i class="fa-solid fa-bolt me-2"></i>Volver a la tienda
+                        </a>
+                        <button type="submit" class="btn btn-danger btn-lg rounded-3">
+                            <i class="fa-solid fa-cart-plus me-2"></i>Añadir al carrito
+                        </button>
+                    </div>
+                </form>
+            </div>
             
         </div>
     </div>
+    
+    <!-- <div class="row mt-5">
+        <div class="col-12">
+            <h2 class="border-bottom pb-2 mb-3">Productos de la misma categoria</h2>
+        
+        </div>
+    </div> -->
 </main>
 {% endblock %}
-
-
-djangologic/urls.py
-
-"""
-URL configuration for djangologic project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-from django.contrib import admin
-from django.urls import path
-from products import views
-from django.conf import settings
-from django.conf.urls.static import static
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-
-    #=================================VIEWS DE Trivens======================================================
-    path('', views.index, name='index'),
-    path('tienda/', views.products_store, name='tienda'),
-    path('signup/', views.signup, name='signup'),
-    path('logout/', views.signout, name='logout'),
-    path('signin/', views.signin, name='signin'),
-    path('carrito/', views.carrito, name='carrito'),
-    path('carrito/add/', views.add_to_cart, name='add_to_cart'),
-    path('carrito/remove/<int:producto_id>/', views.remove_from_cart, name='remove_from_cart'),
-    path('carrito/update/<int:producto_id>/', views.update_cart_quantity, name='update_cart_quantity'),
-    path('carrito/clear/', views.clear_cart, name='clear_cart'), # Opcional: si creas una vista para vaciar todo
-    path('compra', views.compra_productos, name='compra_productos'),
-
-    #=================================VIEWS DE USER======================================================
-    path('user_detail', views.user_details, name='user_detail'),
-
-    path('tienda/<int:products_id>/', views.products_items, name='products_items'),
-
-    #=================================VIEWS DE PRODUCTS Manager======================================================
-    path('manager/', views.home, name='manage'),
-    path('manager/products/', views.products, name='products'),
-    path('manager/products_to_send/', views.products_to_send, name='products_to_send'),
-    path('manager/product/create/', views.create_product, name='create_product'),
-    path('manager/products/<int:products_id>/', views.product_detail, name='products_detail'),
-    # urls.py
-    path('manager/products/<int:products_id>/complete', views.sent_product, name='complete_products'), # type: ignore
-    path('manager/products/<int:products_id>/delete', views.delete_product, name='delete_products'), # <-- Asegúrate de la coma # type: ignore
-    #=================================VIEWS DE PRODUCTS Manager======================================================
-    path('manager/pagos_verificar', views.pagos_verificar, name='pagos_verificar'),
-    path('manager/pagos_aprovados', views.pagos_aprovados, name='pagos_aprovados'),
-    path('manager/pagos_rechazados', views.pagos_rechazados, name='pagos_rechazados'),
-
-    # Rutas de Aprobación/Rechazo (NUEVAS)
-    path('manager/orden/<int:orden_id>/aprobar/', views.orden_aprobar, name='orden_aprobar'),
-    path('manager/orden/<int:orden_id>/rechazar/', views.orden_rechazar, name='orden_rechazar'),
-    
-
-]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

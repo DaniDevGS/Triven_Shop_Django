@@ -29,13 +29,24 @@
                     <button class="btn btn-info w-100 mt-3 mb-4"><i class="fa-solid fa-arrows-rotate me-2"></i>Actualizar Producto</button>
                 </form>
 
+                <div class="mb-4">
+                    <h6>Galería Actual:</h6>
+                    <div class="d-flex flex-wrap">
+                        {% for img in product.imagenes_galeria.all %}
+                            <img src="{{ img.imagen.url }}" style="width: 80px; height: 80px; object-fit: cover; margin: 5px;" class="img-thumbnail">
+                        {% empty %}
+                            <p class="text-muted small">No hay imágenes extra.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
                 <div class="mt-4 d-flex justify-content-between">
-                    <form action="{% url 'complete_products' productos.id %}" method="POST" class="me-2 w-50">
+                    <form action="{% url 'complete_products' product.id %}" method="POST" class="me-2 w-50">
                         {% csrf_token %}
                         <button class="btn btn-success w-100 shadow-sm"><i class="fa-solid fa-arrow-up-from-bracket me-1"></i>Subir Producto</button>
                     </form>
 
-                    <form action="{% url 'delete_products' productos.id %}" method="POST" class="ms-2 w-50">
+                    <form action="{% url 'delete_products' product.id %}" method="POST" class="ms-2 w-50">
                         {% csrf_token %}
                         <button class="btn btn-danger w-100 shadow-sm"><i class="fa-solid fa-trash-can me-1"></i>Eliminar Producto</button>
                     </form>

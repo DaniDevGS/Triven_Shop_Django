@@ -134,5 +134,63 @@
         color: #dc3545;
         transform: translateY(-4px);
     }
+    /* Animación de entrada para el HERO */
+    @keyframes fadeInSlideUp {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    .title h1 {
+        animation: fadeInSlideUp 0.8s ease-out 0.2s forwards;
+        opacity: 0; /* Asegura que el elemento empiece invisible */
+    }
+    .title p {
+        animation: fadeInSlideUp 0.8s ease-out 0.4s forwards;
+        opacity: 0;
+    }
+    .boton_store {
+        animation: fadeInSlideUp 0.8s ease-out 0.6s forwards;
+        opacity: 0;
+        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transición para el hover */
+    }
+    .boton_store:hover {
+        transform: scale(1.05); /* Ligeramente más grande al pasar el ratón */
+        box-shadow: 0 0 15px rgba(220, 53, 69, 0.8); /* Sombra que llama la atención */
+    }
+
+    /* Animación de hover en la sección "¿Por qué nosotros?" */
+    .logues {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .logues:hover {
+        transform: translateY(-8px) scale(1.02); /* Efecto 3D de levantamiento */
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important; /* Sombra más pronunciada */
+    }
+
+    /* Animación de hover para las categorías */
+    .category {
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+        overflow: hidden; /* Oculta el pseudo-elemento de overlay/luz */
+        cursor: pointer;
+        position: relative;
+    }
+    .category:hover {
+        transform: scale(1.03); /* Ligeramente más grande */
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25) !important;
+    }
+    /* Efecto de "Luz Brillante" en hover */
+    .category::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -75%;
+        width: 50%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: skewX(-20deg);
+        transition: transform 0.7s;
+    }
+    .category:hover::before {
+        transform: skewX(-20deg) translateX(250%);
+    }
 </style>
 {% endblock %}

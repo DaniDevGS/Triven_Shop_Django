@@ -135,24 +135,7 @@
                                     <p class="text-danger text-center"><i class="fa-solid fa-triangle-exclamation me-1"></i> Sin Comprobante</p>
                                     {% endif %}
                                 </div>
-
-                                <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                                    
-                                    <form method="POST" action="{% url 'orden_aprobar' orden.id %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="fa-solid fa-check-circle me-1"></i> Aprobar
-                                        </button>
-                                    </form>
-
-                                    <form method="POST" action="{% url 'orden_rechazar' orden.id %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-danger">
-                                            <i class="fa-solid fa-times-circle me-1"></i> Rechazar
-                                        </button>
-                                    </form>
-                                </div>
-                                </div>
+                            </div>
                         </div>
                     </div>
                 {% endfor %}

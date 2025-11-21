@@ -66,14 +66,16 @@ def create_product(request):
                 new_product.user = request.user
                 new_product.save()
                 
-                # === LÓGICA CORREGIDA PARA MULTIPLE FILE FIELD ===
-                # Gracias al MultipleFileField en forms.py, 'imagenes_extra' ya es una lista limpia
-                images = form.cleaned_data.get('imagenes_extra')
+                # === OPCIÓN A: LA QUE YA TIENES (Funciona bien) ===
+                # images = request.FILES.getlist('imagenes_extra') 
                 
-                if images: 
+                # === OPCIÓN B: LA FORMA "DJANGO PRO" (Más segura) ===
+                # Como usamos MultipleFileField, los archivos limpios ya están aquí:
+                images = form.cleaned_data['imagenes_extra'] 
+                
+                if images: # Verificamos que no sea None o vacío
                     for img in images:
                         ProductoImagen.objects.create(producto=new_product, imagen=img)
-                # =================================================
                 
                 return redirect('products')
             else:
@@ -89,36 +91,35 @@ def create_product(request):
 
 @login_required
 def product_detail(request, products_id:int):
-    # Obtenemos el producto (Solo si pertenece al usuario actual)
-    producto = get_object_or_404(Producto, pk=products_id)
-
+    # GET
     if request.method == 'GET':
+        producto = get_object_or_404(Producto, pk=products_id, user=request.user)
         form = ProductForm(instance=producto)
-        # CAMBIO IMPORTANTE: Cambié 'productos' a 'product' para que coincida con tu HTML
-        return render(request, 'manager/products_detail.html', {'product': producto, 'form': form}) 
+        return render(request, 'manager/products_detail.html', {'productos': producto, 'form': form}) 
     
+    # POST
     else:
+        producto = get_object_or_404(Producto, pk=products_id, user=request.user)
         try:
             form = ProductForm(request.POST, request.FILES, instance=producto)
             if form.is_valid():
-                form.save()
+                form.save() # Guarda los cambios del producto base (título, precio, foto principal)
 
-                # === LÓGICA PARA AGREGAR MÁS IMÁGENES AL EDITAR ===
-                images = form.cleaned_data.get('imagenes_extra')
-                if images:
-                    for img in images:
-                        ProductoImagen.objects.create(producto=producto, imagen=img)
-                # ==================================================
+                # === LÓGICA PARA AGREGAR MÁS IMÁGENES EN LA EDICIÓN ===
+                images = request.FILES.getlist('imagenes_extra')
+                for img in images:
+                    ProductoImagen.objects.create(producto=producto, imagen=img)
+                # ======================================================
 
                 return redirect('products')
             else:
                 return render(request, 'manager/products_detail.html', {
-                    'product': producto, 
+                    'productos': producto, 
                     'form': form 
                 })
         except ValueError:
             return render(request, 'manager/products_detail.html', {
-                'product': producto, 
+                'productos': producto, 
                 'form': form, 
                 'error': "Error updating product"
             })
@@ -126,7 +127,7 @@ def product_detail(request, products_id:int):
 def sent_product(request, products_id:int):
     # Productos enviados
     # Se asegura de obtener el producto SOLO si pertenece al usuario logueado
-    producto = get_object_or_404(Producto, pk=products_id)
+    producto = get_object_or_404(Producto, pk=products_id, user=request.user)
     if request.method == 'POST':
         # La condición se cumple: el producto existe y pertenece al usuario.
         # Se marca como 'enviado' (datecompleted)
@@ -136,7 +137,7 @@ def sent_product(request, products_id:int):
 
 
 def delete_product(request, products_id:int):
-    producto = get_object_or_404(Producto, pk=products_id)
+    producto = get_object_or_404(Producto, pk=products_id, user=request.user)
     if request.method == 'POST':
         producto.delete()
         return redirect('products')
@@ -777,3 +778,4 @@ def signin(request):
             login(request, user)
             return redirect('tienda')
         
+Podrias hacer tu las correcciones en el Views.py en create_product y product_detail

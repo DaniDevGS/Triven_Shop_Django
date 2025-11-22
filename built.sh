@@ -24,3 +24,5 @@ python manage.py collectstatic --no-input
 
 # 5. 🔥 CARGAR LOS DATOS (Si aún es necesario) 🔥
 python manage.py loaddata all_data.json
+
+#sss

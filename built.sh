@@ -11,9 +11,9 @@ python manage.py migrate
 # 3. CREAR SUPERUSUARIO (ADMIN)
 # Utiliza las variables de entorno configuradas en Render.
 # El comando --no-input es crucial para que no pida interacción.
-python manage.py createsuperuser --no-input \
-    --username $DJANGO_SUPERUSER_USERNAME \
-    --email $DJANGO_SUPERUSER_EMAIL
+# python manage.py createsuperuser --no-input \
+#     --username $DJANGO_SUPERUSER_USERNAME \
+#     --email $DJANGO_SUPERUSER_EMAIL
 
 # Nota: La contraseña se lee automáticamente de la variable de entorno
 # DJANGO_SUPERUSER_PASSWORD cuando se usa --no-input y se proporcionan

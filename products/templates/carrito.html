@@ -2,234 +2,163 @@
 {% load static %}
 
 {% block content %}
-        <main class="container py-5">
-            <h1 class="mb-4 fw-bold">🛒 Carrito de Compras</h1>
+<main class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl sm:text-4xl font-bold mb-6">🛒 Carrito de Compras</h1>
 
-            {% if items %}
-            <div class="row">
-                <div class="col-lg-8">
-                    {% for item in items %}
-                    <!-- ==============PRODUCTO================== -->
-                    <div class="card mb-3 shadow-sm cart-item">
-                        <div class="row g-0">
-                            <div class="col-md-3 p-3 d-flex align-items-center justify-content-center">
-                                <img src="{{ item.imagen_url }}" class="img-fluid rounded-start" alt="{{ item.title }}" style="max-height: 150px; object-fit: contain;">
-                            </div>
-                            <div class="col-md-9">
-                                <div class="card-body">
-                                    <h5 class="card-title fw-bold">{{ item.title }}</h5>
-                                    
-                                    <div class="d-flex align-items-center mb-3">
-                                        <form action="{% url 'update_cart_quantity' item.producto_id %}" method="POST">
-                                        {% csrf_token %}
-                                        <label for="qty-{{ item.producto_id }}" class="form-label me-3 mb-0 fw-semibold">Cantidad:</label>
-                                        <input type="number"
-                                            name="cantidad"
-                                            id="qty-{{ item.producto_id }}"
-                                            class="form-control form-control-sm me-3"
-                                            value="{{ item.cantidad }}"
-                                            min="1"
-                                            max="{{ item.max_stock }}"
-                                            style="width: 70px;"
-                                            onchange="this.form.submit()">
-                                        </form>
-
-                                        <span class="fs-5 fw-bold text-success price">${{ item.total_item_usd|floatformat:2 }} USD</span>
-
-                                        {% if item.total_item_ves %}
-                                            <span class="fs-5 fw-bold text-warning price">Bs. {{ item.total_item_ves|floatformat:2 }} VES</span>
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="text-muted small">Precio Unitario: ${{ item.price_usd|floatformat:2 }} USD</span>
-                                    
-                                        <form method="POST" action="{% url 'remove_from_cart' item.producto_id %}" class="m-0">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-outline-danger btn-sm remove-item">
-                                                <i class="fa-solid fa-trash-can me-1"></i> Eliminar
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    {% if items %}
+    <div class="flex flex-col lg:flex-row gap-8">
+        <div class="lg:w-2/3">
+            {% for item in items %}
+            <div class="bg-white rounded-lg shadow-md mb-4 cart-item overflow-hidden">
+                <div class="flex flex-col sm:flex-row">
+                    <div class="w-full sm:w-1/4 p-3 flex items-center justify-center">
+                        <img src="{{ item.imagen_url }}" class="w-full h-[150px] object-contain rounded" alt="{{ item.title }}">
                     </div>
-                    {% endfor %}
-                    <!-- ================================================== -->
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
-                        <a href="{% url 'tienda' %}"><button class="btn btn-outline-secondary">Continuar Comprando</button></a>
-                        <form method="POST" action="{% url 'clear_cart' %}" class="m-0">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-warning">Vaciar Carrito</button>
-                    </form>
-                    </div>
-                </div>
-                
-                <div class="col-lg-4 mt-4 mt-lg-0">
-                    <div class="card sticky-top" style="top: 80px;">
-                        <div class="card-header bg-primary text-white fw-bold">
-                            Resumen del Pedido
-                        </div>
-                        <div class="card-body">
-                            <ul class="list-group list-group-flush mb-3">
-                                <li class="list-group-item d-flex justify-content-between">
-                                    {% with items|length as item_count %}
-                                    <span>Subtotal ({{ item_count }} artículo{{ item_count|pluralize }}) en USD:</span>
-                                    {% endwith %}
-                                    <span class="fw-semibold">${{ subtotal_usd|floatformat:2 }}</span>
-                                </li>
+                    <div class="w-full sm:w-3/4 p-4">
+                        <div class="h-full flex flex-col justify-between">
+                            <h2 class="text-xl font-bold mb-2">{{ item.title }}</h2>
 
-                                {% if subtotal_ves %}
-                                <li class="list-group-item d-flex justify-content-between">
-                                    <span>Subtotal en Bolívares (Tasa: {{ bolivar_rate|floatformat:2 }} Bs./$):</span>
-                                    <span class="fw-semibold">Bs. {{ subtotal_ves|floatformat:2 }}</span>
-                                </li>
+                            <div class="flex items-center mb-3 gap-4">
+                                <form action="{% url 'update_cart_quantity' item.producto_id %}" method="POST" class="flex items-center">
+                                    {% csrf_token %}
+                                    <label for="qty-{{ item.producto_id }}" class="mr-3 mb-0 font-semibold text-gray-700">Cantidad:</label>
+                                    <input type="number"
+                                        name="cantidad"
+                                        id="qty-{{ item.producto_id }}"
+                                        class="border border-gray-300 rounded-md p-1 text-sm w-[70px] focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+                                        value="{{ item.cantidad }}"
+                                        min="1"
+                                        max="{{ item.max_stock }}"
+                                        onchange="this.form.submit()">
+                                </form>
+
+                                <span class="text-xl font-bold text-green-600">${{ item.total_item_usd|floatformat:2 }} USD</span>
+
+                                {% if item.total_item_ves %}
+                                    <span class="text-xl font-bold text-yellow-600">Bs. {{ item.total_item_ves|floatformat:2 }} VES</span>
                                 {% endif %}
+                            </div>
 
-                                <li class="list-group-item d-flex justify-content-between">
-                                    <span>Costo de Envío:</span>
-                                    <span class="text-success fw-semibold">Gratis</span>
-                                </li>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-gray-500 text-sm">Precio Unitario: ${{ item.price_usd|floatformat:2 }} USD</span>
 
-                                <li class="list-group-item d-flex justify-content-between">
-                                    <span class="fs-5 fw-bold">Total a Pagar (USD):</span>
-                                    <span class="fs-5 fw-bold text-primary">${{ subtotal_usd|floatformat:2 }}</span>
-                                </li>
-                            </ul>
-                            
-                            <div class="d-grid gap-2">
-                                <a class="btn btn-warning btn-lg fw-bold" href="{% url 'compra_productos' %}" role="button">
-                                    Proceder al Pago
-                                </a>
-                                <p class="text-center mt-2 text-muted"><small>Impuestos y cargos de importación se calcularán en el checkout.</small></p>
+                                <form method="POST" action="{% url 'remove_from_cart' item.producto_id %}" class="m-0">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1.5 text-center transition duration-200">
+                                        <i class="fa-solid fa-trash-can mr-1"></i> Eliminar
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            {% else %}
-            <!-- ============================================================================ELSE================================================================ -->
-            <div class="row justify-content-center my-5">
-                <div class="col-12 col-md-8 col-lg-6 text-center py-5 px-4 bg-white border border-2 rounded-3xl shadow-lg" style="border-style: dashed; border-color: #ced4da;">
-                    <!-- Icono grande y llamativo -->
-                    <i class="fa-solid fa-bag-shopping fa-6x text-muted mb-4" style="opacity: 0.7;"></i>
-            
-                    <h2 class="fw-bolder mb-3 text-dark">¡Tu Carrito Está Vacío!</h2>
-            
-                    <p class="lead mb-4 text-secondary">
-                        Parece que aún no has agregado productos. Explora nuestras fantásticas ofertas y encuentra algo increíble para llenar este espacio.
-                    </p>
-            
-                    <!-- Botón de Llamada a la Acción (Asumo que /products/ es la URL de tu tienda) -->
-                    <a href="{% url 'tienda' %}" class="btn btn-primary btn-lg fw-bold shadow-sm">
-                        <i class="fa-solid fa-shop me-1"></i> Empezar a Comprar
-                    </a>
-                </div>
+            {% endfor %}
+            <div class="flex flex-col sm:flex-row gap-3 mt-6">
+                <a href="{% url 'tienda' %}" class="w-full sm:w-auto">
+                    <button class="w-full sm:w-auto border border-gray-400 text-gray-700 hover:bg-gray-100 font-medium rounded-lg text-base px-5 py-2.5 text-center transition duration-200">
+                        Continuar Comprando
+                    </button>
+                </a>
+                <form method="POST" action="{% url 'clear_cart' %}" class="w-full sm:w-auto">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full sm:w-auto border border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white font-medium rounded-lg text-base px-5 py-2.5 text-center transition duration-200">
+                        Vaciar Carrito
+                    </button>
+                </form>
             </div>
-
-
-            {% endif %}
-
-            <hr class="my-5">
-
-            <!-- <section class="container py-3 products-section">
-                <div class="products-title text-center mb-5">
-                    <h2 class="fw-bold">Productos Recomendados para ti</h2>
+        </div>
+        
+        <div class="lg:w-1/3 lg:mt-0">
+            <div class="sticky top-20 bg-white rounded-lg shadow-xl overflow-hidden">
+                <div class="bg-blue-600 text-white font-bold p-4 text-lg">
+                    Resumen del Pedido
                 </div>
-                <div class="row row-cols-2 row-cols-md-4 g-4 articles-products">
+                <div class="p-4">
+                    <ul class="divide-y divide-gray-200 mb-4">
+                        <li class="flex justify-between py-2">
+                            {% with items|length as item_count %}
+                            <span>Subtotal ({{ item_count }} artículo{{ item_count|pluralize }}) en USD:</span>
+                            {% endwith %}
+                            <span class="font-semibold text-gray-900">${{ subtotal_usd|floatformat:2 }}</span>
+                        </li>
+
+                        {% if subtotal_ves %}
+                        <li class="flex justify-between py-2">
+                            <span>Subtotal en Bolívares (Tasa: {{ bolivar_rate|floatformat:2 }} Bs./$):</span>
+                            <span class="font-semibold text-gray-900">Bs. {{ subtotal_ves|floatformat:2 }}</span>
+                        </li>
+                        {% endif %}
+
+                        <li class="flex justify-between py-2">
+                            <span>Costo de Envío:</span>
+                            <span class="text-green-600 font-semibold">Gratis</span>
+                        </li>
+
+                        <li class="flex justify-between py-2 pt-4">
+                            <span class="text-xl font-bold">Total a Pagar (USD):</span>
+                            <span class="text-xl font-bold text-blue-600">${{ subtotal_usd|floatformat:2 }}</span>
+                        </li>
+                    </ul>
                     
-                    <div class="col">
-                        <div class="card h-100 shadow-sm products">
-                            <img src="/media/productos/Luke.jpg" class="card-img-top products-img" alt="Luke juguete" style="height: 180px; object-fit: cover;">
-                            <div class="card-body d-flex flex-column products-info p-3">
-                                <h6 class="card-title product-title mb-1">Luke juguete</h6>
-                                <div class="d-flex justify-content-between align-items-center mt-2">
-                                    <span class="fw-bold text-success price">10$</span>
-                                    <button class="btn btn-outline-primary btn-sm">
-                                        <i class="fa-solid fa-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col">
-                        <div class="card h-100 shadow-sm products">
-                            <img src="/media/productos/iPhone17.jpg" class="card-img-top products-img" alt="iPhone 17 Pro Max" style="height: 180px; object-fit: cover;">
-                            <div class="card-body d-flex flex-column products-info p-3">
-                                <h6 class="card-title product-title mb-1">iPhone 17 Pro Max</h6>
-                                <div class="d-flex justify-content-between align-items-center mt-2">
-                                    <span class="fw-bold text-success price">10$</span>
-                                    <button class="btn btn-outline-primary btn-sm">
-                                        <i class="fa-solid fa-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col">
-                        <div class="card h-100 shadow-sm products">
-                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
-                                <i class="fa-solid fa-gift fa-3x text-secondary"></i>
-                            </div>
-                            <div class="card-body d-flex flex-column products-info p-3">
-                                <h6 class="card-title product-title mb-1">Producto XYZ</h6>
-                                <div class="d-flex justify-content-between align-items-center mt-2">
-                                    <span class="fw-bold text-success price">5$</span>
-                                    <button class="btn btn-outline-primary btn-sm">
-                                        <i class="fa-solid fa-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col">
-                        <div class="card h-100 shadow-sm products">
-                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
-                                <i class="fa-solid fa-star fa-3x text-secondary"></i>
-                            </div>
-                            <div class="card-body d-flex flex-column products-info p-3">
-                                <h6 class="card-title product-title mb-1">Otro Producto</h6>
-                                <div class="d-flex justify-content-between align-items-center mt-2">
-                                    <span class="fw-bold text-success price">15$</span>
-                                    <button class="btn btn-outline-primary btn-sm">
-                                        <i class="fa-solid fa-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="flex flex-col gap-3">
+                        <a class="bg-yellow-500 hover:bg-yellow-600 text-white text-xl font-bold py-3 px-6 rounded-lg text-center shadow-lg transition duration-200" href="{% url 'compra_productos' %}" role="button">
+                            Proceder al Pago
+                        </a>
+                        <p class="text-center mt-2 text-gray-500 text-sm">Impuestos y cargos de importación se calcularán en el checkout.</p>
                     </div>
                 </div>
-            </section> -->
-            
-        </main>
-
-        <hr>
-
-        <footer class="bg-dark text-white pt-4 pb-2 container-fluid">
-            <div class="container text-center">
-                <div class="social-media mb-3">
-                    <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x icons-a"></i></a>
-                    <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x icons-a"></i></a>
-                    <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-facebook fa-2x icons-a"></i></a>
-                    <a href="https://wa.me/584225924400" target="_blank" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x icons-a"></i></a>
-                </div>
-                <div class="footer-logo mb-3">
-                    <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens">
-                </div>
-                <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
-                
             </div>
-        </footer>
+        </div>
     </div>
 
+    {% else %}
+    <div class="flex justify-center my-10">
+        <div class="w-full max-w-lg text-center py-12 px-6 bg-white border-2 border-dashed border-gray-300 rounded-3xl shadow-xl">
+            <i class="fa-solid fa-bag-shopping text-6xl text-gray-400 mb-6 opacity-70"></i>
+            
+            <h2 class="text-2xl font-extrabold mb-3 text-gray-800">¡Tu Carrito Está Vacío!</h2>
+            
+            <p class="text-lg mb-6 text-gray-600">
+                Parece que aún no has agregado productos. Explora nuestras fantásticas ofertas y encuentra algo increíble para llenar este espacio.
+            </p>
+            
+            <a href="{% url 'tienda' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold py-3 px-6 rounded-lg shadow-md transition duration-200">
+                <i class="fa-solid fa-shop mr-2"></i> Empezar a Comprar
+            </a>
+        </div>
+    </div>
+
+    {% endif %}
+
+    <hr class="my-12 border-gray-300">
+
+    </main>
+
+<hr class="border-gray-300">
+
+<footer class="bg-gray-800 text-white pt-8 pb-4">
+    <div class="container mx-auto px-4 text-center">
+        <div class="social-media mb-4">
+            <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white mx-3 hover:text-red-500 transition duration-300 icons-a"><i class="fa-brands fa-instagram text-2xl"></i></a>
+            <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white mx-3 hover:text-red-500 transition duration-300 icons-a"><i class="fa-brands fa-tiktok text-2xl"></i></a>
+            <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white mx-3 hover:text-red-500 transition duration-300 icons-a"><i class="fa-brands fa-facebook text-2xl"></i></a>
+            <a href="https://wa.me/584225924400" target="_blank" class="text-white mx-3 hover:text-red-500 transition duration-300 icons-a"><i class="fa-brands fa-whatsapp text-2xl"></i></a>
+        </div>
+        <div class="footer-logo mb-4">
+            <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens" class="mx-auto">
+        </div>
+        <p class="text-center text-sm text-gray-400">&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</p>
+        
+    </div>
+</footer>
+
 <style>
+/* El CSS personalizado de Bootstrap se ha mapeado a clases de Tailwind.
+   Si necesitas una animación hover específica, puedes mantenerla aquí o
+   usar la clase `hover:transform hover:-translate-y-1` de Tailwind. */
 .icons-a:hover{
-    color: #dc3545;
+    color: #dc3545; /* color-red-600 */
     transform: translateY(-4px);
 }
 </style>

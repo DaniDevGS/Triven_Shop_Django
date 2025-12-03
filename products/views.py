@@ -1,29 +1,20 @@
 from django.shortcuts import render, redirect, get_object_or_404
-# Asegúrate de importar Q si no lo has hecho, es vital para combinaciones de filtros OR/AND
-from django.db.models import Q
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 from .forms import ProductForm
-from .serializers import ItemSerializer
-from .models import Producto, CATEGORIA_CHOICES, ProductoImagen, Carrito, ItemCarrito, OrdenDeCompra, ItemOrden # <--- IMPORTANTE: Importar Carrito e ItemCarrito
+from .models import Producto, CATEGORIA_CHOICES, ProductoImagen, OrdenDeCompra, ItemOrden 
 from django.contrib import messages
 from.conversion import get_exchange_rate
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal
-from django.views.decorators.http import require_POST # <--- Importar require_POST
-import uuid # Para generar el ID único
-from io import BytesIO # Para manejar el PDF en memoria
-from django.core.files.base import ContentFile # Para guardar archivos
-from django.db import transaction # Para asegurar la integridad de la reducción de stock
-import urllib.parse # Para codificar el mensaje de WhatsApp
+from django.views.decorators.http import require_POST 
+import uuid 
+from django.db import transaction 
+import urllib.parse 
 
-# Create your views here.
-# Create your views here.
-
-# ===============================================================================================================
 #===================================DJANGO ==================================================================
 # ===============================================================================================================
 

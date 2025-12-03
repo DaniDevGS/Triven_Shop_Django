@@ -1,0 +1,1783 @@
+# Base y index con Bootstrap
+
+# base.html
+{% load static %} 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tu pagina de importacion de productos de confianza.">
+    <link rel="shortcut icon" href="{% static 'img/Logo_Triven.png' %}" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://kit.fontawesome.com/daf8c554e7.js" crossorigin="anonymous"></script>
+    <title>Triven Smart Shop</title>
+
+</head>
+<body>
+    <div class="container-fluid p-0">
+        <!--*=================================================MENU DE NAVEGACION===========================================================-->
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm sticky-top">
+                <div class="container">
+                    <a class="navbar-brand fw-bold text-primary" href="{% url 'index' %}">
+                        <img src="{% static 'img/Logo_Triven.png' %}" alt="" width="70">
+                    </a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                        <ul class="navbar-nav align-items-lg-center">
+                            <li class="nav-item">
+                                <a class="nav-link active" aria-current="page" href="{% url 'index' %}">
+                                    <i class="fa-solid fa-house me-1"></i>Inicio
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'tienda' %}">
+                                    <i class="fa-solid fa-shop me-1"></i>Tienda
+                                </a>
+                            </li>
+                            {% if user.is_authenticated %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'user_detail' %}">
+                                    <i class="fa-solid fa-user" style="color: #f90000;"></i><span>{{ request.user.username }}</span>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'signin' %}">
+                                    <i class="fa-solid fa-user"></i>Usuario
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% if user.is_authenticated and request.user.username in MANAGER_USERNAMES %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'manage' %}">
+                                    <i class="fa-solid fa-jedi"></i><span>Manage</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-outline-primary position-relative d-inline-block" href="{% url 'carrito' %}">
+                                    <i class="fa-solid fa-basket-shopping"></i> Carrito
+                                    {% if cart_item_count > 0 %}
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger numerito">{{ cart_item_count }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+    </div>
+
+    {% block content %}
+    {% endblock %}
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
+
+#index.html
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+        <main>
+            <!--*==================================================SECCIONHERO====================================================================-->
+            <section class="p-5 text-center bg-dark text-white main-section" style="background-size: cover; background-position: center; min-height: 400px; display: flex; align-items: center; justify-content: center;">
+                <div class="title bg-dark bg-opacity-75 p-4 rounded">
+                    <h1 class="display-5 display-md-3 fw-bold text-warning">TU MEJOR IMPORTACION, TU MEJOR PRECIO</h1>
+                    <p class="lead mb-4">Precios confiables y productos de calidad.</p>
+                    <a href="{% url 'tienda' %}" class="btn btn-danger btn-lg rounded-pill boton_store">Ver Tienda</a>
+                </div>
+            </section>
+            
+            <!--TODO:=========AGREGAR NUEVOS (EN REVISION)============-->
+            <section class="container py-5 section-info">
+                <h2 class="text-center mb-5 fw-bold title-info">¿Por qué nosotros?</h2>
+                <div class="row text-center row-cols-2 row-cols-md-4 g-4">
+                    <div class="col">
+                        <div class="p-4 border rounded shadow-sm h-100 d-flex flex-column align-items-center logues">
+                            <i class="fa-solid fa-bolt fa-3x text-primary mb-3"></i>
+                            <p class="fw-bold">Compra Rápida</p>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="p-4 border rounded shadow-sm h-100 d-flex flex-column align-items-center logues">
+                            <i class="fa-solid fa-shield fa-3x text-success mb-3"></i>
+                            <p class="fw-bold">Pago Seguro</p>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="p-4 border rounded shadow-sm h-100 d-flex flex-column align-items-center logues">
+                            <i class="fa-solid fa-truck-fast fa-3x text-warning mb-3"></i>
+                            <p class="fw-bold">Envío Gratis</p>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="p-4 border rounded shadow-sm h-100 d-flex flex-column align-items-center logues">
+                            <i class="fa-solid fa-credit-card fa-3x text-danger mb-3"></i>
+                            <p class="fw-bold">Múltiples Métodos</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!--*===========================================SECCION CATEGORIAS========================================================================== -->
+            <section class="container py-5 section-category">
+                <div class="products-title text-center mb-5">
+                    <h2 class="fw-bold">Explora Nuestras Categorías</h2>
+                </div>
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+                    <div class="col">
+                        <div class="card text-center bg-info text-white shadow-lg category" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                            <div class="card-body category-title">
+                                <h3 class="card-title fw-bold">Salud y Belleza</h3>
+                                <button class="btn btn-light mt-3">Ver más</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="card text-center bg-warning text-dark shadow-lg category" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                            <div class="card-body category-title">
+                                <h3 class="card-title fw-bold">Higiene</h3>
+                                <button class="btn btn-dark mt-3">Ver más</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="card text-center bg-danger text-white shadow-lg category" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                            <div class="card-body category-title">
+                                <h3 class="card-title fw-bold">Comestibles</h3>
+                                <button class="btn btn-light mt-3">Ver más</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!--*=====================================================FOOTER DE CONTACTOS========================================================================== -->
+        <footer class="bg-dark text-white pt-4 pb-2 container-fluid">
+            <div class="container text-center">
+                <div class="social-media mb-3">
+                    <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x icons-a"></i></a>
+                    <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x icons-a"></i></a>
+                    <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-facebook fa-2x icons-a"></i></a>
+                    <a href="https://wa.me/584225924400" target="_blank" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x icons-a"></i></a>
+                </div>
+                <div class="footer-logo mb-3">
+                    <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens">
+                </div>
+                <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
+                
+            </div>
+        </footer>
+
+<style>
+    .icons-a:hover{
+        color: #dc3545;
+        transform: translateY(-4px);
+    }
+    /* Animación de entrada para el HERO */
+    @keyframes fadeInSlideUp {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    .title h1 {
+        animation: fadeInSlideUp 0.8s ease-out 0.2s forwards;
+        opacity: 0; /* Asegura que el elemento empiece invisible */
+    }
+    .title p {
+        animation: fadeInSlideUp 0.8s ease-out 0.4s forwards;
+        opacity: 0;
+    }
+    .boton_store {
+        animation: fadeInSlideUp 0.8s ease-out 0.6s forwards;
+        opacity: 0;
+        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transición para el hover */
+    }
+    .boton_store:hover {
+        transform: scale(1.05); /* Ligeramente más grande al pasar el ratón */
+        box-shadow: 0 0 15px rgba(220, 53, 69, 0.8); /* Sombra que llama la atención */
+    }
+
+    /* Animación de hover en la sección "¿Por qué nosotros?" */
+    .logues {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .logues:hover {
+        transform: translateY(-8px) scale(1.02); /* Efecto 3D de levantamiento */
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important; /* Sombra más pronunciada */
+    }
+
+    /* Animación de hover para las categorías */
+    .category {
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+        overflow: hidden; /* Oculta el pseudo-elemento de overlay/luz */
+        cursor: pointer;
+        position: relative;
+    }
+    .category:hover {
+        transform: scale(1.03); /* Ligeramente más grande */
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25) !important;
+    }
+    /* Efecto de "Luz Brillante" en hover */
+    .category::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -75%;
+        width: 50%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: skewX(-20deg);
+        transition: transform 0.7s;
+    }
+    .category:hover::before {
+        transform: skewX(-20deg) translateX(250%);
+    }
+</style>
+{% endblock %}
+
+
+# Tienda y products_items
+
+#tienda.html
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+        <main class="py-5 bg-light">
+            <div class="container">
+                <h1 class="mb-5 fw-bold text-center text-warning">Explora Todos Nuestros Productos</h1>
+
+                <div class="d-lg-none mb-3">
+                    <button class="btn btn-danger w-100 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#filtrosMobile" aria-expanded="false" aria-controls="filtrosMobile">
+                        <i class="fa-solid fa-filter me-2"></i> Mostrar Filtros
+                    </button>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-3 mb-4 collapse d-lg-block" id="filtrosMobile">
+                <div class="card shadow-lg sticky-lg-top" style="top: 80px; z-index: 1;"> <div class="card-header bg-danger text-white fw-bold d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-filter me-2"></i>Filtros</span>
+                        <button type="button" class="btn-close btn-close-white d-lg-none" data-bs-toggle="collapse" data-bs-target="#filtrosMobile" aria-label="Close"></button>
+                    </div>
+
+                    <div class="card-body">
+                        
+                        <div class="mb-4 pb-2 border-bottom">
+                            <h5 class="fw-bold text-dark mb-3">Categorías</h5>
+                            <ul class="list-unstyled small">
+                                <li><a href="{% url 'tienda' %}?min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}" class="text-decoration-none d-block py-1 
+                                        {% if not current_category %}text-warning fw-bold{% else %}text-muted{% endif %}">Todas las categorías</a></li>
+                                {% for codigo, nombre in categorias %}
+                                <li><a href="?category={{ codigo }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}" class="text-decoration-none d-block py-1 {% if current_category == codigo %}text-warning fw-bold{% else %}text-muted{% endif %}">{{ nombre }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+
+                        <div class="mb-4 pb-2 border-bottom">
+                            <h5 class="fw-bold text-dark mb-3">Rango de Precio</h5>
+                            <form method="GET" action="{% url 'tienda' %}">
+                                {% if current_category %}
+                                    <input type="hidden" name="category" value="{{ current_category }}">
+                                {% endif %}
+
+                                <div class="mb-3">
+                                    <label for="min_price" class="form-label small text-danger">Precio Mínimo ($)</label>
+                                    <input type="number" name="min_price" id="min_price" class="form-control form-control-sm text-warning" 
+                                        value="{{ min_price|default:'0' }}" min="0" step="1">
+                                </div>
+
+                                <div class="col">
+                                    <label for="max_price" class="form-label small text-danger">Precio Máximo ($)</label>
+                                    <input type="number" name="max_price" id="max_price" class="form-control form-control-sm text-warning" 
+                                        value="{{ max_price|default:'1500' }}" min="0" step="1">
+                                </div>
+
+                                <button type="submit" class="btn btn-sm btn-outline-danger w-100 mt-3">Aplicar Filtro</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                    </div>
+
+                    <div class="col-lg-9">
+                        <div class="mb-4">
+                            <form method="GET" action="{% url 'tienda' %}" class="input-group input-group-lg shadow-sm border border-danger rounded-pill overflow-hidden">
+                                
+                                {% if current_category %}
+                                    <input type="hidden" name="category" value="{{ current_category }}">
+                                {% endif %}
+                                {% if min_price %}
+                                    <input type="hidden" name="min_price" value="{{ min_price }}">
+                                {% endif %}
+                                {% if max_price %}
+                                    <input type="hidden" name="max_price" value="{{ max_price }}">
+                                {% endif %}
+
+                                <input type="text" name="q" class="form-control border-0 p-3 text-dark fw-bold" 
+                                placeholder="Busca productos..." aria-label="Término de búsqueda" value="{{ search_query|default:'' }}">
+                                
+                                <button class="btn btn-danger px-3 px-md-4" type="submit" id="button-addon2">
+                                    <i class="fa-solid fa-magnifying-glass"></i> <span class="d-none d-sm-inline ms-1">Buscar</span>
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!--*===================================================MOSTRAR PRODUCTOS===========================================================-->
+                        <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border border-info">
+                            <p class="mb-0 text-muted small">Mostrando {{ cantidad }} productos disponibles</p>
+                        </div>
+
+                        <!--*=========================================================PRODUCTOS CONTENEDOR=========================================================== -->
+                        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-3 g-4 articles-products">
+                            <!--*=========================================================PRODUCTOS=========================================================== -->
+                        {% for producto in productos %}
+                            {% if user.is_authenticated %}     
+                            <div class="col">
+                                <a href="{% url 'products_items' producto.id %}" class="text-decoration-none text-dark d-block h-100">
+                                    <div class="card h-100 shadow-lg products hover-shadow-lg">
+                                        <img src="{{ producto.imagen.url }}" class="card-img-top products-img" alt="{{ producto.title }}" style="height: 250px; object-fit: cover;">
+                                        <div class="card-body d-flex flex-column products-info">
+                                            <h5 class="card-title product-title">{{ producto.title }}</h5>
+                                            <p class="card-text product-description flex-grow-1">{{ producto.description|truncatewords:20 }}</p>
+                                            <span class="fs-4 fw-bold text-success price">{{ producto.price }}$</span>
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                
+                                                <span class="fs-4 fw-bold text-warning price-bolivar">({{ producto.price_ves|floatformat:2 }}Bs)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            {% else %}
+                            <div class="col">
+                                <a href="{% url 'signup' %}" class="text-decoration-none text-dark d-block h-100">
+                                    <div class="card h-100 shadow-lg products hover-shadow-lg">
+                                        <img src="{{ producto.imagen.url }}" class="card-img-top products-img" alt="{{ producto.title }}" style="height: 250px; object-fit: cover;">
+                                        <div class="card-body d-flex flex-column products-info">
+                                            <h5 class="card-title product-title">{{ producto.title }}</h5>
+                                            <p class="card-text product-description flex-grow-1 producto_descripcion">{{ producto.description }}</p>
+                                            <span class="fs-4 fw-bold text-success price">{{ producto.price }}$</span>
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                
+                                                <span class="fs-4 fw-bold text-warning price-bolivar">({{ producto.price_ves|floatformat:2 }}Bs)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                        </div>
+                    </div>
+                    </div>
+            </div>
+        </main>
+
+        <footer class="bg-dark text-white pt-4 pb-2 container-fluid">
+            <div class="container text-center">
+                <div class="social-media mb-3">
+                    <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x icons-a"></i></a>
+                    <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x icons-a"></i></a>
+                    <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-facebook fa-2x icons-a"></i></a>
+                    <a href="https://wa.me/584225924400" target="_blank" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x icons-a"></i></a>
+                </div>
+                <div class="footer-logo mb-3">
+                    <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens">
+                </div>
+                <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
+                
+            </div>
+        </footer>
+<style>
+    /* Estilo para recortar descripción en tarjetas */
+    .producto_descripcion{
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        line-clamp: 3;
+        -webkit-line-clamp: 3;
+        margin-bottom: 0.5rem;
+    }
+
+    .icons-a:hover{
+        color: #dc3545;
+        transform: translateY(-4px);
+    }
+    /* Animación de interacción para las tarjetas de producto */
+    .products {
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+    .products:hover {
+        transform: translateY(-5px) scale(1.01); /* Ligeramente se levanta y agranda */
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1); /* Sombra que simula elevación */
+        border: 1px solid #dc3545; /* Resalta el borde para mejor indicación */
+    }
+
+    /* Animación de hover para los enlaces de categorías en el filtro */
+    .list-unstyled a {
+        transition: color 0.2s ease, padding-left 0.2s ease;
+        position: relative;
+        padding-left: 10px;
+    }
+    .list-unstyled a:hover {
+        color: #dc3545 !important; /* Rojo al pasar el ratón */
+        padding-left: 15px; /* Pequeño deslizamiento a la derecha */
+    }
+    .list-unstyled a:hover::before {
+        content: '•';
+        position: absolute;
+        left: 0;
+        color: #dc3545;
+    }
+    /* Estilo del botón de búsqueda al hacer hover */
+    #button-addon2 {
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    #button-addon2:hover { background-color: #c82333; transform: scale(1.02); }
+</style>
+{% endblock %}
+
+
+#products_items.html
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<main class="container my-3 my-md-4">
+    <a href="{% url 'tienda' %}" class="d-md-none text-decoration-none text-muted mb-3 d-inline-block">
+        <i class="fa-solid fa-arrow-left me-1"></i> Volver
+    </a>
+
+    <div class="row mb-5">
+        <div class="col-lg-8 col-md-7 mb-4 **mb-md-4**">
+            <div class="d-flex gap-3 h-100 **flex-column flex-md-row**">
+                
+                <div class="d-none d-md-flex flex-column gap-2" style="width: 70px;">
+                    {% if producto.imagen %}
+                    <div class="thumbnail-container active" onmouseover="changeImage('{{ producto.imagen.url }}', this)">
+                        <img src="{{ producto.imagen.url }}" class="img-fluid rounded border" alt="Principal">
+                    </div>
+                    {% endif %}
+
+                    {% for img in imagenes_galeria %}
+                    <div class="thumbnail-container" onmouseover="changeImage('{{ img.imagen.url }}', this)">
+                        <img src="{{ img.imagen.url }}" class="img-fluid rounded border" alt="Imagen extra">
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center bg-white rounded position-relative **p-0 p-md-3**" **style="min-height: 300px; max-height: 600px;"**>
+                    <img id="mainImage" 
+                          src="{{ producto.imagen.url }}" 
+                          class="img-fluid rounded" 
+                          alt="{{ producto.title }}" 
+                          style="max-height: 100%;  width: auto; object-fit: contain;">
+                </div>
+            </div>
+            
+            <div class="d-flex d-md-none gap-2 overflow-auto **mt-3** pb-2">
+                {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" onclick="changeImage('{{ producto.imagen.url }}', null)" class="rounded border **cursor-pointer**" style="width: 60px; height: 60px; object-fit: cover;">
+                {% endif %}
+                {% for img in imagenes_galeria %}
+                <img src="{{ img.imagen.url }}" onclick="changeImage('{{ img.imagen.url }}', null)" class="rounded border **cursor-pointer**" style="width: 60px; height: 60px; object-fit: cover;">
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-5 **mb-4 mb-md-5**">
+            <div class="card border-light shadow-sm p-4">
+                <small class="text-muted mb-2 d-block">Nuevo | {{ producto.cantidad }} disponibles</small>
+                
+                <h1 class="h4 fw-bold text-dark mb-3">
+                    {{ producto.title }}
+                </h1>
+
+                <div class="mb-3">
+                    <span class="d-block display-6 fw-normal text-success">
+                        ${{ producto.price|floatformat:2 }}
+                    </span>
+                    <span class="d-block fs-5 text-warning">
+                        Bs {{ producto.price_ves|floatformat:2 }}
+                    </span>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-success fw-bold mb-0"><i class="fa-solid fa-truck me-2"></i>Envío gratis</p>
+                    <small class="text-muted">A todo el país</small>
+                </div>
+
+                <form method="POST" action="{% url 'add_to_cart' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="producto_id" value="{{ producto.id }}">
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted" style="font-size: 0.9rem;">Cantidad:</label>
+                        <div class="d-flex align-items-center">
+                            <input type="number" 
+                                        name="cantidad" 
+                                        id="cantidad-{{ producto.id }}" 
+                                        class="form-control fw-bold me-2" 
+                                        style="width: 80px;"
+                                        value="1" 
+                                        min="1" 
+                                        max="{{ producto.cantidad }}">
+                            <span class="text-muted small">({{ producto.cantidad }} disponibles)</span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-lg rounded-3">
+                            Comprar ahora
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-4 pt-3 border-top text-center">
+                    <a href="{% url 'tienda' %}" class="text-decoration-none text-muted small">
+                        <i class="fa-solid fa-shop me-1"></i> Ir a la tienda
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row border-top pt-5">
+        <div class="col-lg-8 col-md-10 mx-auto">
+            <h3 class="mb-4 fw-light text-uppercase" style="letter-spacing: 1px;">Descripción</h3>
+            
+            <div class="description-container">
+                <p class="card-text product-description fs-5 text-secondary clamped-text" id="desc-text" style="white-space: pre-line;">
+                    {{ producto.description }}
+                </p>
+            </div>
+            
+            <button onclick="toggleDescription()" id="btn-ver-mas" class="btn btn-link text-decoration-none p-0 mt-2 fw-bold">
+                Ver más características <i class="fa-solid fa-chevron-down ms-1"></i>
+            </button>
+        </div>
+    </div>
+
+    
+</main>
+
+<style>
+    /* Estilos de Galería estilo ML */
+    .thumbnail-container {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 2px;
+        cursor: pointer;
+        transition: border-color 0.2s;
+    }
+    
+    .thumbnail-container:hover, 
+    .thumbnail-container.active {
+        border-color: #3483fa; /* Azul característico estilo ML */
+        border-width: 2px;
+    }
+
+    .thumbnail-container img {
+        width: 100%;
+        height: 50px; /* Altura fija para uniformidad */
+        object-fit: contain;
+    }
+
+    /* Estilos Descripción */
+    .clamped-text {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        line-clamp: 8; /* Mostramos un poco más antes de cortar */
+        -webkit-line-clamp: 8;
+        mask-image: linear-gradient(180deg, #000 80%, transparent);
+        -webkit-mask-image: linear-gradient(180deg, #000 80%, transparent);
+    }
+
+    .expanded-text {
+        display: block;
+        mask-image: none;
+        -webkit-mask-image: none;
+    }
+    /* Media Query para mejorar la responsividad en móviles (menos de 768px) */
+    @media (max-width: 767.98px) {
+        /* Se puede omitir min-height en el div de imagen principal si usamos p-0 p-md-3 en el HTML */
+        /*
+        .col-lg-8 > .d-flex > div:nth-child(2) {
+            min-height: 300px !important; 
+        }
+        */
+
+        /* Añadimos un poco de margen para separar la descripción de la Card */
+        .row.border-top.pt-5 {
+            padding-top: 3rem !important;
+        }
+
+        /* Ajustamos el tamaño de la fuente del título para que no sea tan grande */
+        .col-lg-4 h1 {
+            font-size: 1.5rem !important; /* De h4 (1.5rem) a algo más apropiado si es necesario, aunque h4 está bien */
+        }
+    }
+</style>
+
+<script>
+    // Función Galería: Cambiar imagen principal
+    function changeImage(src, element) {
+        // Cambiar src de la imagen grande
+        document.getElementById('mainImage').src = src;
+        
+        // Si es desktop (hay elemento thumbnail), manejar clase activa
+        if (element) {
+            // Quitar clase active de todos
+            const thumbnails = document.querySelectorAll('.thumbnail-container');
+            thumbnails.forEach(thumb => thumb.classList.remove('active'));
+            
+            // Agregar a la actual
+            element.classList.add('active');
+        }
+    }
+
+    // Función Descripción: Expandir/Colapsar
+    function toggleDescription() {
+        const desc = document.getElementById('desc-text');
+        const btn = document.getElementById('btn-ver-mas');
+        
+        if (desc.classList.contains('clamped-text')) {
+            desc.classList.remove('clamped-text');
+            desc.classList.add('expanded-text');
+            btn.innerHTML = 'Ver menos <i class="fa-solid fa-chevron-up ms-1"></i>';
+        } else {
+            desc.classList.add('clamped-text');
+            desc.classList.remove('expanded-text');
+            btn.innerHTML = 'Ver más características <i class="fa-solid fa-chevron-down ms-1"></i>';
+            
+            // Scroll suave hacia el inicio de la descripción
+            desc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+</script>
+{% endblock %}
+
+
+
+# CARRITO Y PAGO
+
+
+#carrito.html
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+        <main class="container py-5">
+            <h1 class="mb-4 fw-bold">🛒 Carrito de Compras</h1>
+
+            {% if items %}
+            <div class="row">
+                <div class="col-lg-8">
+                    {% for item in items %}
+                    <!-- ==============PRODUCTO================== -->
+                    <div class="card mb-3 shadow-sm cart-item">
+                        <div class="row g-0">
+                            <div class="col-md-3 p-3 d-flex align-items-center justify-content-center">
+                                <img src="{{ item.imagen_url }}" class="img-fluid rounded-start" alt="{{ item.title }}" style="max-height: 150px; object-fit: contain;">
+                            </div>
+                            <div class="col-md-9">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold">{{ item.title }}</h5>
+                                    
+                                    <div class="d-flex align-items-center mb-3">
+                                        <form action="{% url 'update_cart_quantity' item.producto_id %}" method="POST">
+                                        {% csrf_token %}
+                                        <label for="qty-{{ item.producto_id }}" class="form-label me-3 mb-0 fw-semibold">Cantidad:</label>
+                                        <input type="number"
+                                            name="cantidad"
+                                            id="qty-{{ item.producto_id }}"
+                                            class="form-control form-control-sm me-3"
+                                            value="{{ item.cantidad }}"
+                                            min="1"
+                                            max="{{ item.max_stock }}"
+                                            style="width: 70px;"
+                                            onchange="this.form.submit()">
+                                        </form>
+
+                                        <span class="fs-5 fw-bold text-success price">${{ item.total_item_usd|floatformat:2 }} USD</span>
+
+                                        {% if item.total_item_ves %}
+                                            <span class="fs-5 fw-bold text-warning price">Bs. {{ item.total_item_ves|floatformat:2 }} VES</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted small">Precio Unitario: ${{ item.price_usd|floatformat:2 }} USD</span>
+                                    
+                                        <form method="POST" action="{% url 'remove_from_cart' item.producto_id %}" class="m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm remove-item">
+                                                <i class="fa-solid fa-trash-can me-1"></i> Eliminar
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <!-- ================================================== -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
+                        <a href="{% url 'tienda' %}"><button class="btn btn-outline-secondary">Continuar Comprando</button></a>
+                        <form method="POST" action="{% url 'clear_cart' %}" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-warning">Vaciar Carrito</button>
+                    </form>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 mt-4 mt-lg-0">
+                    <div class="card sticky-top" style="top: 80px;">
+                        <div class="card-header bg-primary text-white fw-bold">
+                            Resumen del Pedido
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush mb-3">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    {% with items|length as item_count %}
+                                    <span>Subtotal ({{ item_count }} artículo{{ item_count|pluralize }}) en USD:</span>
+                                    {% endwith %}
+                                    <span class="fw-semibold">${{ subtotal_usd|floatformat:2 }}</span>
+                                </li>
+
+                                {% if subtotal_ves %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Subtotal en Bolívares (Tasa: {{ bolivar_rate|floatformat:2 }} Bs./$):</span>
+                                    <span class="fw-semibold">Bs. {{ subtotal_ves|floatformat:2 }}</span>
+                                </li>
+                                {% endif %}
+
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Costo de Envío:</span>
+                                    <span class="text-success fw-semibold">Gratis</span>
+                                </li>
+
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span class="fs-5 fw-bold">Total a Pagar (USD):</span>
+                                    <span class="fs-5 fw-bold text-primary">${{ subtotal_usd|floatformat:2 }}</span>
+                                </li>
+                            </ul>
+                            
+                            <div class="d-grid gap-2">
+                                <a class="btn btn-warning btn-lg fw-bold" href="{% url 'compra_productos' %}" role="button">
+                                    Proceder al Pago
+                                </a>
+                                <p class="text-center mt-2 text-muted"><small>Impuestos y cargos de importación se calcularán en el checkout.</small></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- ============================================================================ELSE================================================================ -->
+            <div class="row justify-content-center my-5">
+                <div class="col-12 col-md-8 col-lg-6 text-center py-5 px-4 bg-white border border-2 rounded-3xl shadow-lg" style="border-style: dashed; border-color: #ced4da;">
+                    <!-- Icono grande y llamativo -->
+                    <i class="fa-solid fa-bag-shopping fa-6x text-muted mb-4" style="opacity: 0.7;"></i>
+            
+                    <h2 class="fw-bolder mb-3 text-dark">¡Tu Carrito Está Vacío!</h2>
+            
+                    <p class="lead mb-4 text-secondary">
+                        Parece que aún no has agregado productos. Explora nuestras fantásticas ofertas y encuentra algo increíble para llenar este espacio.
+                    </p>
+            
+                    <!-- Botón de Llamada a la Acción (Asumo que /products/ es la URL de tu tienda) -->
+                    <a href="{% url 'tienda' %}" class="btn btn-primary btn-lg fw-bold shadow-sm">
+                        <i class="fa-solid fa-shop me-1"></i> Empezar a Comprar
+                    </a>
+                </div>
+            </div>
+
+
+            {% endif %}
+
+            <hr class="my-5">
+
+            <!-- <section class="container py-3 products-section">
+                <div class="products-title text-center mb-5">
+                    <h2 class="fw-bold">Productos Recomendados para ti</h2>
+                </div>
+                <div class="row row-cols-2 row-cols-md-4 g-4 articles-products">
+                    
+                    <div class="col">
+                        <div class="card h-100 shadow-sm products">
+                            <img src="/media/productos/Luke.jpg" class="card-img-top products-img" alt="Luke juguete" style="height: 180px; object-fit: cover;">
+                            <div class="card-body d-flex flex-column products-info p-3">
+                                <h6 class="card-title product-title mb-1">Luke juguete</h6>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span class="fw-bold text-success price">10$</span>
+                                    <button class="btn btn-outline-primary btn-sm">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="card h-100 shadow-sm products">
+                            <img src="/media/productos/iPhone17.jpg" class="card-img-top products-img" alt="iPhone 17 Pro Max" style="height: 180px; object-fit: cover;">
+                            <div class="card-body d-flex flex-column products-info p-3">
+                                <h6 class="card-title product-title mb-1">iPhone 17 Pro Max</h6>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span class="fw-bold text-success price">10$</span>
+                                    <button class="btn btn-outline-primary btn-sm">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="card h-100 shadow-sm products">
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                                <i class="fa-solid fa-gift fa-3x text-secondary"></i>
+                            </div>
+                            <div class="card-body d-flex flex-column products-info p-3">
+                                <h6 class="card-title product-title mb-1">Producto XYZ</h6>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span class="fw-bold text-success price">5$</span>
+                                    <button class="btn btn-outline-primary btn-sm">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="card h-100 shadow-sm products">
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                                <i class="fa-solid fa-star fa-3x text-secondary"></i>
+                            </div>
+                            <div class="card-body d-flex flex-column products-info p-3">
+                                <h6 class="card-title product-title mb-1">Otro Producto</h6>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span class="fw-bold text-success price">15$</span>
+                                    <button class="btn btn-outline-primary btn-sm">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section> -->
+            
+        </main>
+
+        <hr>
+
+        <footer class="bg-dark text-white pt-4 pb-2 container-fluid">
+            <div class="container text-center">
+                <div class="social-media mb-3">
+                    <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x icons-a"></i></a>
+                    <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x icons-a"></i></a>
+                    <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-facebook fa-2x icons-a"></i></a>
+                    <a href="https://wa.me/584225924400" target="_blank" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x icons-a"></i></a>
+                </div>
+                <div class="footer-logo mb-3">
+                    <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens">
+                </div>
+                <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
+                
+            </div>
+        </footer>
+    </div>
+
+<style>
+.icons-a:hover{
+    color: #dc3545;
+    transform: translateY(-4px);
+}
+</style>
+{% endblock %}
+
+#pago.html
+
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    /* Estilo para asegurar que la imagen de previsualización sea atractiva y responsiva */
+    #imagen_previa {
+        max-width: 100%;
+        height: auto;
+        max-height: 250px; /* Limita la altura para no ocupar demasiado espacio */
+        display: none; /* Inicialmente oculta hasta que se seleccione una imagen */
+        margin-top: 15px;
+        border: 2px solid #dc3545; /* Color rojo de tu marca (danger) */
+        border-radius: .3rem;
+        object-fit: contain; /* Asegura que la imagen completa se vea */
+    }
+
+    #spinner-container {
+        display: none; /* Inicialmente oculto */
+    }
+
+    .dot-spinner {
+        --uib-size: 2.8rem;
+        --uib-speed: .9s;
+        --uib-color: #183153;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        height: var(--uib-size);
+        width: var(--uib-size);
+    }
+
+    .dot-spinner__dot {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        height: 100%;
+        width: 100%;
+    }
+
+    .dot-spinner__dot::before {
+        content: '';
+        height: 20%;
+        width: 20%;
+        border-radius: 50%;
+        background-color: var(--uib-color);
+        transform: scale(0);
+        opacity: 0.5;
+        animation: pulse0112 calc(var(--uib-speed) * 1.111) ease-in-out infinite;
+        box-shadow: 0 0 20px rgba(18, 31, 53, 0.3);
+    }
+
+    .dot-spinner__dot:nth-child(2) {
+        transform: rotate(45deg);
+    }
+
+    .dot-spinner__dot:nth-child(2)::before {
+        animation-delay: calc(var(--uib-speed) * -0.875);
+    }
+
+    .dot-spinner__dot:nth-child(3) {
+        transform: rotate(90deg);
+    }
+
+    .dot-spinner__dot:nth-child(3)::before {
+        animation-delay: calc(var(--uib-speed) * -0.75);
+    }
+
+    .dot-spinner__dot:nth-child(4) {
+        transform: rotate(135deg);
+    }
+
+    .dot-spinner__dot:nth-child(4)::before {
+        animation-delay: calc(var(--uib-speed) * -0.625);
+    }
+
+    .dot-spinner__dot:nth-child(5) {
+        transform: rotate(180deg);
+    }
+
+    .dot-spinner__dot:nth-child(5)::before {
+        animation-delay: calc(var(--uib-speed) * -0.5);
+    }
+
+    .dot-spinner__dot:nth-child(6) {
+        transform: rotate(225deg);
+    }
+
+    .dot-spinner__dot:nth-child(6)::before {
+        animation-delay: calc(var(--uib-speed) * -0.375);
+    }
+
+    .dot-spinner__dot:nth-child(7) {
+        transform: rotate(270deg);
+    }
+
+    .dot-spinner__dot:nth-child(7)::before {
+        animation-delay: calc(var(--uib-speed) * -0.25);
+    }
+
+    .dot-spinner__dot:nth-child(8) {
+        transform: rotate(315deg);
+    }
+
+    .dot-spinner__dot:nth-child(8)::before {
+        animation-delay: calc(var(--uib-speed) * -0.125);
+    }
+
+    @keyframes pulse0112 {
+        0%,
+        100% {
+            transform: scale(0);
+            opacity: 0.5;
+    }
+
+        50% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+
+</style>
+
+<main class="container py-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2 col-lg-6 offset-lg-3">
+            <h1 class="text-center fw-bold text-dark mb-4">
+                <i class="fa-solid fa-credit-card me-2 text-danger"></i>Finalizar Compra
+            </h1>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message|safe }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <div class="card card-body p-4 shadow-lg bg-light border-0 mb-4">
+                <h2 class="text-danger mb-3 fw-bold">Pasos para el Pago</h2>
+                
+                <article class="mb-3 border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">1. Identificador Único</h5>
+                    <p class="text-muted mb-0">El sistema le ha asignado un **ID único de compra**. Utilícelo para referenciar su pago.</p>
+                </article>
+
+                <article class="border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">2. Adjuntar Comprobante</h5>
+                    <p class="text-muted mb-0">Debe adjuntar una imagen clara del comprobante para que su pago sea validado exitosamente.</p>
+                </article>
+            </div>
+
+            <div class="card card-body p-4 shadow-lg bg-light border-2 mb-4">
+                <h2 class="text-danger mb-3 fw-bold">Datos del pago</h2>
+                <p class="fw-bold text-dark">Pague a esta cuenta</p>
+                
+                <article class="mb-3 border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">Cedula:</h5>
+                    <p class="mb-0 fw-bold text-dark">V-23016849</p>
+                </article>
+
+                <article class="border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">Numero telefonico</h5>
+                    <p class="mb-0 fw-bold text-dark">0422-5924400</p>
+
+                </article>
+
+                <article class="mt-3 border-start border-danger border-4 ps-3">
+                    <h5 class="fw-bold text-dark">Banco Receptor</h5>
+                    <p class="mb-0 fw-bold text-dark">0102 (Banco de Venezuela)</p>
+                </article>
+            </div>
+
+            <form action="" method="POST" enctype="multipart/form-data" class="card card-body p-5 shadow-lg bg-white border-0" id="payment-form">
+                {% csrf_token %}
+
+                <div class="mb-4 text-center p-3 border rounded bg-warning bg-opacity-10">
+                    <p class="mb-1 text-muted fw-bold">Su ID Único de Compra:</p>
+                    <p class="h4 fw-bold text-danger">{{ id_compra }}</p>
+                    </div>
+
+                <div class="mb-4">
+                    <label for="id_compra" class="form-label fw-bold">Confirme su ID de compra</label>
+                    <input type="text" name="id_confirmacion" class="form-control" placeholder="Escriba su ID único" maxlength="100" required d="id_compra_confirmacion" value="{{ productos.id_compra|default:'' }}">
+                </div>
+
+                <div class="mb-4">
+                    <label for="input_imagen" class="form-label fw-bold">
+                        <i class="fa-solid fa-image me-1"></i> Imagen de Comprobante:
+                    </label>
+                    <input type="file" id="input_imagen" name="imagen_comprobante" class="form-control" accept="image/png, image/jpeg, image/jpg" required/>
+                    
+                    <img id="imagen_previa" src="#" alt="Previsualización del comprobante de pago">
+                </div>
+                
+                <button type="submit" class="btn btn-danger btn-lg w-100 mt-3" id="submit-button">
+                    <i class="fa-solid fa-circle-check me-2"></i> Validar Pago
+                </button>
+            </form>
+
+            <div id="spinner-container" class="card card-body p-5 shadow-lg bg-white border-0 text-center mt-3">
+                <h5 class="text-dark fw-bold mb-3">
+                    <i class="fa-solid fa-hourglass-start me-2 text-danger"></i> Validando Pago y Procesando Orden...
+                </h5>
+                <p class="text-muted">Por favor, espere. Esto puede tardar unos segundos.</p>
+                <div class="d-flex justify-content-center">
+                    <div class="dot-spinner">
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                        <div class="dot-spinner__dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // Script para previsualización de imagen (déjalo donde está o inclúyelo aquí)
+    document.getElementById('input_imagen').addEventListener('change', function(event) {
+        const input = event.target;
+        const imagenPrevia = document.getElementById('imagen_previa');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                imagenPrevia.src = e.target.result;
+                imagenPrevia.style.display = 'block'; // Muestra la imagen
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            imagenPrevia.src = '#';
+            imagenPrevia.style.display = 'none'; // Oculta si no hay archivo
+        }
+    });
+
+    // 🎯 Nuevo Script para manejo de envío y Spinner
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('payment-form');
+        const submitButton = document.getElementById('submit-button');
+        const spinnerContainer = document.getElementById('spinner-container');
+
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                // 1. Deshabilitar el botón para evitar doble click
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Validando...';
+                
+                // 2. Ocultar el formulario
+                form.style.display = 'none';
+
+                // 3. Mostrar el spinner
+                spinnerContainer.style.display = 'block';
+
+                // El formulario se enviará de forma natural después de esto.
+                // Si la vista falla, Django recarga la página y el script se reinicia.
+            });
+        }
+        
+        // Función para restaurar el estado si la página se carga con mensajes de error
+        const messagesContainer = document.querySelector('.alert');
+        if (messagesContainer) {
+             // Si hay mensajes (y generalmente son de error al re-renderizar),
+             // aseguramos que el formulario esté visible y el spinner oculto.
+             form.style.display = 'block';
+             submitButton.disabled = false;
+             submitButton.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i> Validar Pago';
+             spinnerContainer.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}
+
+
+
+
+#USER_DETAIL, SIGNIN Y SIGNUP
+
+#user_detail.html
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ------------------------------------------- */
+    /* ANIMACIONES GLOBALES */
+    /* ------------------------------------------- */
+    @keyframes fadeInSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ------------------------------------------- */
+    /* Estilos de Píldoras de Navegación */
+    /* ------------------------------------------- */
+    .nav-pills .nav-link {
+        color: #dc3545; /* Color principal (rojo/warning del original) */
+        border: 1px solid #dc3545;
+        margin: 0 5px 10px 5px; /* Espacio para móvil */
+        padding: 10px 20px;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+    .nav-pills .nav-link.active, .nav-pills .nav-link:hover {
+        background-color: #dc3545;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Estilo de la Hero Card (Perfil) */
+    #Hero-card {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Gradiente suave */
+        border-radius: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: 2px solid #dc3545; /* Borde sutil del color principal */
+    }
+
+    /* Estilo para las tarjetas de órdenes (más visuales) */
+    .order-card-pending { border-left: 5px solid #ffc107; } /* Warning */
+    .order-card-approved { border-left: 5px solid #198754; } /* Success */
+    .order-card-rejected { border-left: 5px solid #dc3545; } /* Danger */
+
+    .order-card .card-header {
+        background-color: #f7f7f7;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 1rem 1.5rem;
+    }
+    .order-card .product-item {
+        border-bottom: 1px dashed #eee;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+    .order-card .product-item:last-child {
+        border-bottom: none;
+    }
+    .icons-a:hover {
+        color: #dc3545;
+        transform: translateY(-4px);
+    }
+
+    /* Para que el smooth scroll funcione bien */
+    section {
+        padding-top: 20px;
+        margin-top: -20px;
+    }
+</style>
+
+
+<main class="container py-5">
+    <h1 class="text-center mb-2 text-dark fw-bolder">Panel de Usuario</h1>
+    <p class="text-center text-muted mb-5">Bienvenido, aquí puedes gestionar tus compras y ver el estado de tus órdenes.</p>
+
+    <!--============================= HERO CARD (PERFIL) ================================================-->
+    <section class="card mb-5" id="Hero-profile">
+        <div class="card-body p-4 p-md-5 d-flex flex-column flex-md-row align-items-center justify-content-between">
+            <div class="text-center text-md-start mb-4 mb-md-0">
+                <i class="fa-solid fa-circle-user fa-5x text-danger mb-3"></i>
+                <h2 class="card-title fw-bolder mb-1 display-5 text-dark">{{ username }}</h2>
+                <span class="text-muted fw-light">Usuario activo en el sistema.</span>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <a href="#Orders-pending" class="btn btn-primary fw-bold btn-lg">
+                    <i class="fa-solid fa-cart-shopping me-2"></i>Ver Mis Órdenes
+                </a>
+                <a href="{% url 'logout' %}" class="btn btn-outline-danger fw-bold">
+                    <i class="fa-solid fa-door-open me-2"></i>Cerrar Sesión
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <style>
+        @keyframes pulse-icon{
+            0% {opacity: 0.8; transform: scale(1); }
+            100% {opacity: 1; transform: scale(1.05); }
+        }
+    </style>
+
+    <hr class="my-5">
+
+    <!--============================= BARRA DE NAVEGACIÓN (FUNCIONALIDAD SCROLL) ================================================-->
+    <header class="mb-5">
+        <nav>
+            <!-- He actualizado los hrefs para que coincidan con las nuevas IDs de las secciones -->
+            <ul class="nav nav-pills justify-content-center flex-column flex-sm-row" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active scroll-link" data-target="#Hero-profile" href="#Hero-profile">
+                        <i class="fa-solid fa-user me-2"></i>Perfil
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link scroll-link" data-target="#Orders-pending" href="#Orders-pending">
+                        <i class="fa-solid fa-file-import me-2"></i>Por Verificar
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link scroll-link" data-target="#Orders-approved" href="#Orders-approved">
+                        <i class="fa-solid fa-certificate me-2"></i>Aprobados
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link scroll-link" data-target="#Orders-rejected" href="#Orders-rejected">
+                        <i class="fa-regular fa-circle-xmark me-2"></i>Pagos Rechazados
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!--============================= PRODUCTOS POR VERIFICAR (PENDIENTE) ================================================-->
+    <!-- ID de sección actualizada a Orders-pending -->
+    <section id="Orders-pending" class="mb-5">
+        <h2 class="mb-4 text-warning fw-bold"><i class="fa-solid fa-clock-rotate-left me-2"></i>Órdenes Pendientes de Verificación</h2>
+
+        {% if ordenes_pendientes%}
+            <div class="row g-4">
+                {% for orden in ordenes_pendientes %}
+                    <div class="col-12">
+                        <!-- Estilo de tarjeta mejorado para Pendiente -->
+                        <div class="card shadow order-card order-card-pending">
+                            <div class="card-body p-4">
+                                <header class="d-flex justify-content-between align-items-start mb-3">
+                                    <h3 class="card-title fw-bold text-truncate text-dark h5 mb-0">
+                                        Orden ID: <span class="text-warning">{{ orden.id_compra }}</span>
+                                    </h3>
+                                    <span class="badge bg-warning text-dark py-2 px-3 fw-bold">
+                                        PENDIENTE
+                                    </span>
+                                </header>
+
+                                <hr class="my-3">
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <h5 class="fw-bolder mb-3 text-secondary">Detalle de Productos:</h5>
+                                        <!-- Diseño de lista mejorado -->
+                                        <ul class="list-group list-group-flush mb-4">
+                                            {% for item in orden.items_orden.all %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 product-item">
+                                                <div class="text-dark d-flex align-items-center">
+                                                    <i class="fa-solid fa-tag me-2 text-muted"></i>
+                                                    {{ item.producto.title }}
+                                                    <span class="badge bg-secondary ms-2">x{{ item.cantidad }}</span>
+                                                </div>
+                                                <small class="text-dark fw-bold">${{ item.total_item|floatformat:2 }}</small>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-4 border-start ps-md-4">
+                                        <div class="mb-3">
+                                            <p class="text-muted mb-1 fw-bold">Total Pagado:</p>
+                                            <p class="h3 text-warning fw-bolder">${{ orden.subtotal_usd|floatformat:2 }}</p>
+                                        </div>
+
+                                        <p class="text-muted mb-1"><i class="fa-regular fa-calendar-alt me-1"></i> Fecha: {{ orden.fecha_orden|date:"d M Y" }}</p>
+                                        <p class="text-muted mb-3"><i class="fa-regular fa-clock me-1"></i> Hora: {{ orden.fecha_orden|date:'H:i' }}</p>
+
+                                        <!-- Comprobante visual más destacado -->
+                                        {% if orden.imagen_comprobante %}
+                                        <p class="fw-bold mb-2">Comprobante:</p>
+                                        <a href="{{ orden.imagen_comprobante.url }}" target="_blank" class="d-block position-relative">
+                                            <img src="{{ orden.imagen_comprobante.url }}" alt="Comprobante de Pago {{ orden.id_compra }}" class="img-thumbnail rounded shadow-sm w-100" style="height: 120px; object-fit: cover;">
+                                            <span class="badge bg-success position-absolute top-0 start-100 translate-middle rounded-pill">Ver</span>
+                                        </a>
+                                        {% else %}
+                                        <div class="alert alert-danger p-2 text-center">
+                                            <i class="fa-solid fa-triangle-exclamation me-1"></i> Sin Comprobante
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+        <div class="alert alert-info text-center shadow-sm">No tienes órdenes pendientes de verificación.</div>
+        {% endif %}
+    </section>
+
+    <!--============================= PRODUCTOS APROBADOS ================================================-->
+    <!-- ID de sección actualizada a Orders-approved -->
+    <section id="Orders-approved" class="mb-5">
+        <h2 class="mb-4 text-success fw-bold"><i class="fa-solid fa-check-circle me-2"></i>Órdenes Aprobadas</h2>
+
+        {% if ordenes_aprobadas %}
+            <div class="row g-4">
+                {% for orden in ordenes_aprobadas %}
+                    <div class="col-12">
+                        <!-- Estilo de tarjeta mejorado para Aprobado -->
+                        <div class="card shadow order-card order-card-approved">
+                            <div class="card-body p-4">
+                                <header class="d-flex justify-content-between align-items-start mb-3">
+                                    <h3 class="card-title fw-bold text-truncate text-dark h5 mb-0">
+                                        Orden ID: <span class="text-success">{{ orden.id_compra }}</span>
+                                    </h3>
+                                    <span class="badge bg-success text-white py-2 px-3 fw-bold">
+                                        APROBADO
+                                    </span>
+                                </header>
+
+                                <hr class="my-3">
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <h5 class="fw-bolder mb-3 text-secondary">Detalle de Productos:</h5>
+                                        <ul class="list-group list-group-flush mb-4">
+                                            {% for item in orden.items_orden.all %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 product-item">
+                                                <div class="text-dark d-flex align-items-center">
+                                                    <i class="fa-solid fa-tag me-2 text-muted"></i>
+                                                    {{ item.producto.title }}
+                                                    <span class="badge bg-secondary ms-2">x{{ item.cantidad }}</span>
+                                                </div>
+                                                <small class="text-dark fw-bold">${{ item.total_item|floatformat:2 }}</small>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-4 border-start ps-md-4">
+                                        <div class="mb-3">
+                                            <p class="text-muted mb-1 fw-bold">Total Pagado:</p>
+                                            <p class="h3 text-success fw-bolder">${{ orden.subtotal_usd|floatformat:2 }}</p>
+                                        </div>
+
+                                        <p class="text-muted mb-1"><i class="fa-regular fa-calendar-alt me-1"></i> Fecha: {{ orden.fecha_orden|date:"d M Y" }}</p>
+                                        <p class="text-muted mb-3"><i class="fa-regular fa-clock me-1"></i> Hora: {{ orden.fecha_orden|date:'H:i' }}</p>
+
+                                        {% if orden.imagen_comprobante %}
+                                        <p class="fw-bold mb-2">Comprobante:</p>
+                                        <a href="{{ orden.imagen_comprobante.url }}" target="_blank" class="d-block position-relative">
+                                            <img src="{{ orden.imagen_comprobante.url }}" alt="Comprobante de Pago {{ orden.id_compra }}" class="img-thumbnail rounded shadow-sm w-100" style="height: 120px; object-fit: cover;">
+                                            <span class="badge bg-success position-absolute top-0 start-100 translate-middle rounded-pill">Ver</span>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+        <div class="alert alert-info text-center shadow-sm">No tienes órdenes Aprobadas.</div>
+        {% endif %}
+    </section>
+
+    <!--============================= PRODUCTOS RECHAZADOS ================================================-->
+    <!-- ID de sección actualizada a Orders-rejected -->
+    <section id="Orders-rejected" class="mb-5">
+        <h2 class="mb-4 text-danger fw-bold"><i class="fa-solid fa-ban me-2"></i>Pagos Rechazados</h2>
+
+        {% if ordenes_rechazadas %}
+            <div class="row g-4">
+                {% for orden in ordenes_rechazadas %}
+                    <div class="col-12">
+                        <!-- Estilo de tarjeta mejorado para Rechazado -->
+                        <div class="card shadow order-card order-card-rejected">
+                            <div class="card-body p-4">
+                                <header class="d-flex justify-content-between align-items-start mb-3">
+                                    <h3 class="card-title fw-bold text-truncate text-dark h5 mb-0">
+                                        Orden ID: <span class="text-danger">{{ orden.id_compra }}</span>
+                                    </h3>
+                                    <span class="badge bg-danger text-white py-2 px-3 fw-bold">
+                                        RECHAZADO
+                                    </span>
+                                </header>
+
+                                <hr class="my-3">
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <h5 class="fw-bolder mb-3 text-secondary">Detalle de Productos:</h5>
+                                        <ul class="list-group list-group-flush mb-4">
+                                            {% for item in orden.items_orden.all %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 product-item">
+                                                <div class="text-dark d-flex align-items-center">
+                                                    <i class="fa-solid fa-tag me-2 text-muted"></i>
+                                                    {{ item.producto.title }}
+                                                    <span class="badge bg-secondary ms-2">x{{ item.cantidad }}</span>
+                                                </div>
+                                                <small class="text-dark fw-bold">${{ item.total_item|floatformat:2 }}</small>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-4 border-start ps-md-4">
+                                        <div class="mb-3">
+                                            <p class="text-muted mb-1 fw-bold">Total Pagado:</p>
+                                            <p class="h3 text-danger fw-bolder">${{ orden.subtotal_usd|floatformat:2 }}</p>
+                                        </div>
+
+                                        <p class="text-muted mb-1"><i class="fa-regular fa-calendar-alt me-1"></i> Fecha: {{ orden.fecha_orden|date:"d M Y" }}</p>
+                                        <p class="text-muted mb-3"><i class="fa-regular fa-clock me-1"></i> Hora: {{ orden.fecha_orden|date:'H:i' }}</p>
+
+                                        {% if orden.imagen_comprobante %}
+                                        <p class="fw-bold mb-2">Comprobante:</p>
+                                        <a href="{{ orden.imagen_comprobante.url }}" target="_blank" class="d-block position-relative">
+                                            <img src="{{ orden.imagen_comprobante.url }}" alt="Comprobante de Pago {{ orden.id_compra }}" class="img-thumbnail rounded shadow-sm w-100" style="height: 120px; object-fit: cover;">
+                                            <span class="badge bg-success position-absolute top-0 start-100 translate-middle rounded-pill">Ver</span>
+                                        </a>
+                                        {% else %}
+                                        <div class="alert alert-danger p-2 text-center">
+                                            <i class="fa-solid fa-triangle-exclamation me-1"></i> Sin Comprobante
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+        <div class="alert alert-info text-center shadow-sm" style="animation: fadeInSlideUp 0.7s ease-out backwards; animation-delay: 0.9s;">No tienes órdenes Rechazadas.</div>
+        {% endif %}
+    </section>
+
+</main>
+
+
+<!-- =======================================================FOOTER DE CONTACTOS (SIN CAMBIOS) ========================================================================== -->
+<footer class="bg-dark text-white pt-4 pb-2 container-fluid">
+    <div class="container text-center">
+        <div class="social-media mb-3">
+            <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-instagram fa-2x"></i></a>
+            <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-tiktok fa-2x"></i></a>
+            <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-facebook fa-2x"></i></a>
+            <a href="https://wa.me/584225924400" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-whatsapp fa-2x"></i></a>
+        </div>
+        <div class="footer-logo mb-3">
+            <!-- Asumiendo que esta es una URL estática de Django -->
+            <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens">
+        </div>
+        <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
+        
+    </div>
+</footer>
+
+<!-- JavaScript para Smooth Scroll y Activación de Botones -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const scrollLinks = document.querySelectorAll('.scroll-link');
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link.scroll-link');
+
+        // Función para el desplazamiento suave
+        scrollLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('data-target');
+                const targetElement = document.querySelector(targetId);
+
+                if (targetElement) {
+                    // Desplazamiento suave (se resta 70px para dejar espacio a una posible barra de navegación fija)
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 70, 
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Función para activar el enlace de navegación al hacer scroll (observador)
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const sectionId = entry.target.getAttribute('id');
+                const correspondingLink = document.querySelector(`.nav-link[data-target="#${sectionId}"]`);
+
+                if (entry.isIntersecting) {
+                    // Remover 'active' de todos
+                    navLinks.forEach(link => link.classList.remove('active'));
+                    // Agregar 'active' al enlace correspondiente
+                    if (correspondingLink) {
+                        correspondingLink.classList.add('active');
+                    }
+                }
+            });
+        }, {
+            root: null, // viewport
+            rootMargin: '0px 0px -80% 0px', // Activar cuando la sección esté a 80% del inicio del viewport
+            threshold: 0 // Iniciar inmediatamente
+        });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+        
+        // Configurar el enlace activo por defecto al cargar la página
+        // Simular clic en "Perfil" para que la apariencia inicial sea correcta
+        const defaultActiveLink = document.querySelector('.nav-link[data-target="#Hero-profile"]');
+        if(defaultActiveLink) {
+             defaultActiveLink.classList.add('active');
+        }
+    });
+</script>
+
+{% endblock %}
+
+#signin.html
+
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="container py-5">
+    <div class="row">
+        <section class="col-md-6 offset-md-3 col-lg-4 offset-lg-4">
+            <form action="/signin/" method="POST" class="card card-body p-5 shadow-lg bg-white border-0">
+                <h1 class="text-center text-danger mb-4 fw-bold">Iniciar Sesión</h1>
+                
+                {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                {% endif %}
+                
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="id_username" class="form-label fw-bold">Nombre de Usuario:</label>
+                    <input type="text" name="username" class="form-control" placeholder="Escribe tu nombre de usuario" required id="id_username">
+                </div>
+
+                <div class="mb-4">
+                    <label for="id_password" class="form-label fw-bold">Contraseña:</label>
+                    <div class="input-group">
+                        <input type="password" name="password" class="form-control" placeholder="Escribe tu contraseña" required id="id_password">
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('id_password', this)">
+                            <i class="fa-solid fa-eye" id="icon-id_password"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="btn btn-danger btn-lg">
+                    <i class="fa-solid fa-user me-2"></i>Iniciar Sesión
+                </button>
+                <small class="text-center mt-3 text-muted">¿No tienes cuenta? <a href="/signup/" class="text-primary fw-bold">Regístrate aquí</a></small>
+
+            </form>
+        </section>
+    </div>
+</main>
+
+<script>
+    function togglePasswordVisibility(fieldId, buttonElement) {
+        const passwordField = document.getElementById(fieldId);
+        const iconElement = buttonElement.querySelector('i');
+
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            iconElement.classList.remove('fa-eye');
+            iconElement.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            iconElement.classList.remove('fa-eye-slash');
+            iconElement.classList.add('fa-eye');
+        }
+    }
+</script>
+{% endblock %}
+
+#signup.html
+
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="container py-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3 col-lg-4 offset-lg-4">
+            <form method="POST" class="card card-body p-5 shadow-lg bg-white border-0">
+
+                <h1 class="text-center text-danger mb-4 fw-bold">Registrarse</h1>
+                
+                {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                {% endif %}
+                
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="id_username" class="form-label fw-bold">Nombre de Usuario:</label>
+                    <input type="text" name="username" class="form-control" placeholder="Escribe tu nombre de usuario" required id="id_username">
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_email" class="form-label fw-bold">Correo Electrónico (Gmail):</label>
+                    <input type="email" name="email" class="form-control" placeholder="ejemplo@gmail.com" required id="id_email">
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_password1" class="form-label fw-bold">Contraseña:</label>
+                    <div class="input-group">
+                        <input type="password" name="password1" class="form-control" placeholder="Escribe tu contraseña" required id="id_password1">
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('id_password1', this)">
+                            <i class="fa-solid fa-eye" id="icon-id_password1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="id_password2" class="form-label fw-bold">Confirmar Contraseña:</label>
+                    <div class="input-group">
+                        <input type="password" name="password2" class="form-control" placeholder="Confirma tu contraseña" required id="id_password2">
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('id_password2', this)">
+                            <i class="fa-solid fa-eye" id="icon-id_password2"></i>
+                        </button>
+
+                    </div>
+                </div>
+                
+                <button class="btn btn-warning btn-lg">
+                    <i class="fa-solid fa-paper-plane me-2 text-danger"></i>Registrarse
+                </button>
+                <small class="text-center mt-3 text-muted">¿Ya tienes cuenta? <a href="{% url 'signin' %}" class="text-text-primary fw-bold">Inicia sesión aquí</a></small>
+
+            </form>
+        </div>
+    </div>
+</main>
+
+<script>
+    function togglePasswordVisibility(fieldId, buttonElement) {
+        const passwordField = document.getElementById(fieldId);
+        const iconElement = buttonElement.querySelector('i');
+
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            iconElement.classList.remove('fa-eye');
+            iconElement.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            iconElement.classList.remove('fa-eye-slash');
+            iconElement.classList.add('fa-eye');
+        }
+    }
+</script>
+
+{% endblock %}

@@ -1,22 +1,23 @@
 {% extends 'base.html' %}
 {% block content %}
 <style>
-    /* Estilo para asegurar que la imagen de previsualización sea atractiva y responsiva */
+    /* Estilos específicos del spinner (se mantienen ya que son complejos y no son fáciles de replicar con clases atómicas puras de Tailwind sin configurar un plugin) */
     #imagen_previa {
         max-width: 100%;
         height: auto;
-        max-height: 250px; /* Limita la altura para no ocupar demasiado espacio */
-        display: none; /* Inicialmente oculta hasta que se seleccione una imagen */
+        max-height: 250px; 
+        display: none; 
         margin-top: 15px;
-        border: 2px solid #dc3545; /* Color rojo de tu marca (danger) */
-        border-radius: .3rem;
-        object-fit: contain; /* Asegura que la imagen completa se vea */
+        border: 2px solid #dc3545; /* Usaremos 'border-red-600' en la clase, pero este estilo interno lo sobrescribe */
+        border-radius: .3rem; /* rounded-md */
+        object-fit: contain;
     }
 
     #spinner-container {
         display: none; /* Inicialmente oculto */
     }
-
+    
+    /* Inicio de estilos del dot-spinner (MANTENER) */
     .dot-spinner {
         --uib-size: 2.8rem;
         --uib-speed: .9s;
@@ -28,7 +29,7 @@
         height: var(--uib-size);
         width: var(--uib-size);
     }
-
+    /* Resto de estilos del dot-spinner... */
     .dot-spinner__dot {
         position: absolute;
         top: 0;
@@ -120,94 +121,95 @@
             opacity: 1;
         }
     }
-
+    /* Fin de estilos del dot-spinner */
 
 </style>
 
-<main class="container py-5">
-    <div class="row">
-        <div class="col-md-8 offset-md-2 col-lg-6 offset-lg-3">
-            <h1 class="text-center fw-bold text-dark mb-4">
-                <i class="fa-solid fa-credit-card me-2 text-danger"></i>Finalizar Compra
+<main class="container mx-auto px-4 py-8">
+    <div class="flex justify-center">
+        <div class="w-full md:w-4/5 lg:w-1/2">
+            <h1 class="text-center text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
+                <i class="fa-solid fa-credit-card mr-2 text-red-600"></i>Finalizar Compra
             </h1>
 
             {% if messages %}
             {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="p-4 mb-4 text-sm rounded-lg relative {{ message.tags|yesno:'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200, bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' }}" role="alert">
                 {{ message|safe }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="absolute top-0 right-0 p-4 text-lg font-semibold" data-dismiss-target=".alert" aria-label="Close" onclick="this.parentNode.style.display='none';">
+                    &times;
+                </button>
             </div>
             {% endfor %}
             {% endif %}
 
-            <div class="card card-body p-4 shadow-lg bg-light border-0 mb-4">
-                <h2 class="text-danger mb-3 fw-bold">Pasos para el Pago</h2>
+            <div class="bg-white p-6 rounded-lg shadow-xl mb-6">
+                <h2 class="text-2xl text-red-600 mb-4 font-bold">Pasos para el Pago</h2>
                 
-                <article class="mb-3 border-start border-danger border-4 ps-3">
-                    <h5 class="fw-bold text-dark">1. Identificador Único</h5>
-                    <p class="text-muted mb-0">El sistema le ha asignado un **ID único de compra**. Utilícelo para referenciar su pago.</p>
+                <article class="mb-4 border-l-4 border-red-600 pl-4">
+                    <h5 class="text-xl font-bold text-gray-800">1. Identificador Único</h5>
+                    <p class="text-gray-600 mb-0">El sistema le ha asignado un <strong class="font-semibold">ID único de compra</strong>. Utilícelo para referenciar su pago.</p>
                 </article>
 
-                <article class="border-start border-danger border-4 ps-3">
-                    <h5 class="fw-bold text-dark">2. Adjuntar Comprobante</h5>
-                    <p class="text-muted mb-0">Debe adjuntar una imagen clara del comprobante para que su pago sea validado exitosamente.</p>
+                <article class="border-l-4 border-red-600 pl-4">
+                    <h5 class="text-xl font-bold text-gray-800">2. Adjuntar Comprobante</h5>
+                    <p class="text-gray-600 mb-0">Debe adjuntar una imagen clara del comprobante para que su pago sea validado exitosamente.</p>
                 </article>
             </div>
 
-            <div class="card card-body p-4 shadow-lg bg-light border-2 mb-4">
-                <h2 class="text-danger mb-3 fw-bold">Datos del pago</h2>
-                <p class="fw-bold text-dark">Pague a esta cuenta</p>
+            <div class="bg-white p-6 rounded-lg shadow-xl mb-6 border-2 border-gray-100">
+                <h2 class="text-2xl text-red-600 mb-4 font-bold">Datos del pago</h2>
+                <p class="font-bold text-gray-800">Pague a esta cuenta</p>
                 
-                <article class="mb-3 border-start border-danger border-4 ps-3">
-                    <h5 class="fw-bold text-dark">Cedula:</h5>
-                    <p class="mb-0 fw-bold text-dark">V-23016849</p>
+                <article class="mb-3 border-l-4 border-red-600 pl-4">
+                    <h5 class="text-lg font-bold text-gray-800">Cédula:</h5>
+                    <p class="mb-0 font-bold text-gray-800">V-23016849</p>
                 </article>
 
-                <article class="border-start border-danger border-4 ps-3">
-                    <h5 class="fw-bold text-dark">Numero telefonico</h5>
-                    <p class="mb-0 fw-bold text-dark">0422-5924400</p>
-
+                <article class="border-l-4 border-red-600 pl-4">
+                    <h5 class="text-lg font-bold text-gray-800">Número telefónico</h5>
+                    <p class="mb-0 font-bold text-gray-800">0422-5924400</p>
                 </article>
 
-                <article class="mt-3 border-start border-danger border-4 ps-3">
-                    <h5 class="fw-bold text-dark">Banco Receptor</h5>
-                    <p class="mb-0 fw-bold text-dark">0102 (Banco de Venezuela)</p>
+                <article class="mt-4 border-l-4 border-red-600 pl-4">
+                    <h5 class="text-lg font-bold text-gray-800">Banco Receptor</h5>
+                    <p class="mb-0 font-bold text-gray-800">0102 (Banco de Venezuela)</p>
                 </article>
             </div>
 
-            <form action="" method="POST" enctype="multipart/form-data" class="card card-body p-5 shadow-lg bg-white border-0" id="payment-form">
+            <form action="" method="POST" enctype="multipart/form-data" class="bg-white p-8 rounded-lg shadow-xl" id="payment-form">
                 {% csrf_token %}
 
-                <div class="mb-4 text-center p-3 border rounded bg-warning bg-opacity-10">
-                    <p class="mb-1 text-muted fw-bold">Su ID Único de Compra:</p>
-                    <p class="h4 fw-bold text-danger">{{ id_compra }}</p>
-                    </div>
-
-                <div class="mb-4">
-                    <label for="id_compra" class="form-label fw-bold">Confirme su ID de compra</label>
-                    <input type="text" name="id_confirmacion" class="form-control" placeholder="Escriba su ID único" maxlength="100" required d="id_compra_confirmacion" value="{{ productos.id_compra|default:'' }}">
+                <div class="mb-6 text-center p-4 border rounded-lg bg-yellow-50 bg-opacity-70 border-yellow-200">
+                    <p class="mb-1 text-gray-600 font-bold">Su ID Único de Compra:</p>
+                    <p class="text-2xl font-bold text-red-600">{{ id_compra }}</p>
                 </div>
 
-                <div class="mb-4">
-                    <label for="input_imagen" class="form-label fw-bold">
-                        <i class="fa-solid fa-image me-1"></i> Imagen de Comprobante:
+                <div class="mb-6">
+                    <label for="id_compra_confirmacion" class="block text-sm font-bold text-gray-700 mb-2">Confirme su ID de compra</label>
+                    <input type="text" name="id_confirmacion" class="border border-gray-300 p-3 w-full rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150" placeholder="Escriba su ID único" maxlength="100" required id="id_compra_confirmacion" value="{{ productos.id_compra|default:'' }}">
+                </div>
+
+                <div class="mb-6">
+                    <label for="input_imagen" class="block text-sm font-bold text-gray-700 mb-2">
+                        <i class="fa-solid fa-image mr-1"></i> Imagen de Comprobante:
                     </label>
-                    <input type="file" id="input_imagen" name="imagen_comprobante" class="form-control" accept="image/png, image/jpeg, image/jpg" required/>
+                    <input type="file" id="input_imagen" name="imagen_comprobante" class="border border-gray-300 p-3 w-full rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-600 hover:file:bg-red-100 transition duration-150" accept="image/png, image/jpeg, image/jpg" required/>
                     
-                    <img id="imagen_previa" src="#" alt="Previsualización del comprobante de pago">
+                    <img id="imagen_previa" src="#" alt="Previsualización del comprobante de pago" class="mt-4 rounded-md border-2 border-red-600 max-h-[250px] w-auto object-contain">
                 </div>
                 
-                <button type="submit" class="btn btn-danger btn-lg w-100 mt-3" id="submit-button">
-                    <i class="fa-solid fa-circle-check me-2"></i> Validar Pago
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-xl font-bold py-3 w-full rounded-lg mt-4 shadow-lg transition duration-200" id="submit-button">
+                    <i class="fa-solid fa-circle-check mr-2"></i> Validar Pago
                 </button>
             </form>
 
-            <div id="spinner-container" class="card card-body p-5 shadow-lg bg-white border-0 text-center mt-3">
-                <h5 class="text-dark fw-bold mb-3">
-                    <i class="fa-solid fa-hourglass-start me-2 text-danger"></i> Validando Pago y Procesando Orden...
+            <div id="spinner-container" class="bg-white p-8 rounded-lg shadow-xl text-center mt-6">
+                <h5 class="text-xl text-gray-800 font-bold mb-3">
+                    <i class="fa-solid fa-hourglass-start mr-2 text-red-600"></i> Validando Pago y Procesando Orden...
                 </h5>
-                <p class="text-muted">Por favor, espere. Esto puede tardar unos segundos.</p>
-                <div class="d-flex justify-content-center">
+                <p class="text-gray-600 mb-6">Por favor, espere. Esto puede tardar unos segundos.</p>
+                <div class="flex justify-center">
                     <div class="dot-spinner">
                         <div class="dot-spinner__dot"></div>
                         <div class="dot-spinner__dot"></div>
@@ -225,7 +227,7 @@
 </main>
 
 <script>
-    // Script para previsualización de imagen (déjalo donde está o inclúyelo aquí)
+    // Script para previsualización de imagen (se mantiene igual, no usa clases de estilo de Bootstrap)
     document.getElementById('input_imagen').addEventListener('change', function(event) {
         const input = event.target;
         const imagenPrevia = document.getElementById('imagen_previa');
@@ -245,7 +247,7 @@
         }
     });
 
-    // 🎯 Nuevo Script para manejo de envío y Spinner
+    // 🎯 Script para manejo de envío y Spinner (Se adapta para remover las clases de spinner de Bootstrap)
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('payment-form');
         const submitButton = document.getElementById('submit-button');
@@ -255,28 +257,26 @@
             form.addEventListener('submit', function(event) {
                 // 1. Deshabilitar el botón para evitar doble click
                 submitButton.disabled = true;
-                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Validando...';
+                // Reemplazamos el spinner de Bootstrap por un SVG o simplemente el texto 'Validando...'
+                submitButton.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Validando...';
                 
                 // 2. Ocultar el formulario
                 form.style.display = 'none';
 
                 // 3. Mostrar el spinner
                 spinnerContainer.style.display = 'block';
-
-                // El formulario se enviará de forma natural después de esto.
-                // Si la vista falla, Django recarga la página y el script se reinicia.
             });
         }
         
         // Función para restaurar el estado si la página se carga con mensajes de error
         const messagesContainer = document.querySelector('.alert');
         if (messagesContainer) {
-             // Si hay mensajes (y generalmente son de error al re-renderizar),
-             // aseguramos que el formulario esté visible y el spinner oculto.
-             form.style.display = 'block';
-             submitButton.disabled = false;
-             submitButton.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i> Validar Pago';
-             spinnerContainer.style.display = 'none';
+            // Si hay mensajes (y generalmente son de error al re-renderizar),
+            // aseguramos que el formulario esté visible y el spinner oculto.
+            form.style.display = 'block';
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fa-solid fa-circle-check mr-2"></i> Validar Pago';
+            spinnerContainer.style.display = 'none';
         }
     });
 </script>

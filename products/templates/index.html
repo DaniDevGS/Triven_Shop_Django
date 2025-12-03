@@ -3,158 +3,175 @@
 
 {% block content %}
         <main>
+            <section class="p-12 text-center bg-gray-900 text-white main-section flex items-center justify-center" style="background-size: cover; background-position: center; min-height: 400px;">
+                <div class="title bg-gray-900 bg-opacity-75 p-6 rounded-lg shadow-2xl">
+                    <h1 class="titulo-h1 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-warning">
+                        <span class="linea-animada">TU MEJOR IMPORTACION,</span> <br>
+                        <span class="linea-animada">TU MEJOR PRECIO</span>
+                    </h1>
+                    <p class="subtitulo-p text-xl mb-6">Precios confiables y productos de calidad.</p>
+                    <a href="{% url 'tienda' %}" class="inline-block py-3 px-8 bg-danger text-white text-lg font-semibold rounded-full hover:bg-red-700 transition duration-300 boton_store">Ver Tienda</a>
+                </div>
+            </section>
             
-            <!-- ================================================================SECCION HERO==================================================================== -->
-            <section class="p-5 text-center bg-dark text-white main-section" style="background-size: cover; background-position: center; min-height: 400px; display: flex; align-items: center; justify-content: center;">
-                <div class="title bg-dark bg-opacity-75 p-4 rounded">
-                    <h1 class="display-5 display-md-3 fw-bold text-warning">TU MEJOR IMPORTACION</h1>
-                    <p class="lead mb-4">Precios confiables y productos de calidad.</p>
-                    <a href="{% url 'tienda' %}" class="btn btn-danger btn-lg rounded-pill boton_store">Ver Tienda</a>
-                </div>
-            </section>
-            <!-- ==================================================================================================================================================== -->
-
-
-            <!-- ================================================================SECCION NOSOTROS==================================================================== -->
-            <section class="container py-5 section-info">
-                <h2 class="text-center mb-5 fw-bold title-info">¿Por qué nosotros?</h2>
-                <div class="row text-center row-cols-2 row-cols-md-4 g-4">
-                    <div class="col">
-                        <div class="p-4 border rounded shadow-sm h-100 d-flex flex-column align-items-center logues">
-                            <i class="fa-solid fa-bolt fa-3x text-primary mb-3"></i>
-                            <p class="fw-bold">Compra Rápida</p>
+            <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 section-info">
+                <h2 class="text-center mb-10 text-3xl font-bold text-gray-800 title-info">¿Por qué nosotros?</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                    <div>
+                        <div class="p-6 border border-gray-200 rounded-xl shadow-lg h-full flex flex-col items-center justify-center logues">
+                            <i class="fa-solid fa-bolt text-4xl text-primary mb-4"></i>
+                            <p class="font-bold text-lg text-gray-700">Compra Rápida</p>
                         </div>
                     </div>
-                    <div class="col">
-                        <div class="p-4 border rounded shadow-sm h-100 d-flex flex-column align-items-center logues">
-                            <i class="fa-solid fa-shield fa-3x text-success mb-3"></i>
-                            <p class="fw-bold">Pago Seguro</p>
+                    <div>
+                        <div class="p-6 border border-gray-200 rounded-xl shadow-lg h-full flex flex-col items-center justify-center logues">
+                            <i class="fa-solid fa-shield text-4xl text-green-500 mb-4"></i>
+                            <p class="font-bold text-lg text-gray-700">Pago Seguro</p>
                         </div>
                     </div>
-                    <div class="col">
-                        <div class="p-4 border rounded shadow-sm h-100 d-flex flex-column align-items-center logues">
-                            <i class="fa-solid fa-truck-fast fa-3x text-warning mb-3"></i>
-                            <p class="fw-bold">Envío Gratis</p>
+                    <div>
+                        <div class="p-6 border border-gray-200 rounded-xl shadow-lg h-full flex flex-col items-center justify-center logues">
+                            <i class="fa-solid fa-truck-fast text-4xl text-warning mb-4"></i>
+                            <p class="font-bold text-lg text-gray-700">Envío Gratis</p>
                         </div>
                     </div>
-                    <div class="col">
-                        <div class="p-4 border rounded shadow-sm h-100 d-flex flex-column align-items-center logues">
-                            <i class="fa-solid fa-credit-card fa-3x text-danger mb-3"></i>
-                            <p class="fw-bold">Múltiples Métodos</p>
+                    <div>
+                        <div class="p-6 border border-gray-200 rounded-xl shadow-lg h-full flex flex-col items-center justify-center logues">
+                            <i class="fa-solid fa-credit-card text-4xl text-danger mb-4"></i>
+                            <p class="font-bold text-lg text-gray-700">Múltiples Métodos</p>
                         </div>
                     </div>
                 </div>
             </section>
-            <!-- =================================================================================================================================================== -->
 
-            <!-- =======================================================SECCION PRODUCTOS DESTACADOS==================================================================== -->
-            <!-- <section class="container py-5 bg-light products-section">
-                <div class="products-title text-center mb-5">
-                    <h2 class="fw-bold">Productos Destacados</h2>
+            <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 section-category">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-800">Explora Nuestras Categorías</h2>
                 </div>
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 articles-products">
-                {% for producto in productos %}
-                    <div class="col">
-                        <div class="card h-100 shadow-lg products">
-                            <img src="{{ producto.imagen.url }}" class="card-img-top products-img" alt="Goku SSj Funko" style="height: 250px; object-fit: cover;">
-                            <div class="card-body d-flex flex-column products-info">
-                                <h5 class="card-title product-title">{{ producto.title }}</h5>
-                                <p class="card-text product-description flex-grow-1">{{ producto.description }}</p>
-                                <button class="btn-sm btn-danger" ><span class="fs-4 fw-bold text-primary price">Cantidad:{{ producto.cantidad }}</span></button>
-                                <div class="d-flex justify-content-between align-items-center mt-3">
-                                    <span class="fs-4 fw-bold text-success price">{{ producto.price }}$</span>
-                                    <button class="btn btn-primary btn-sm">Añadir</button>
-                                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <div class="text-center bg-info text-white shadow-xl category rounded-xl flex items-stretch" style="min-height: 200px;">
+                            <div class="category-image flex-1 min-w-0 max-w-1/2 relative">
+                                <img src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,h=490,fit=crop/ALp2M1K7MPFOoJyX/1760274476019-YD0EG29ZQWuq24NP.jpg" class="w-full h-full object-cover rounded-l-xl"  alt="Productos de Salud y Belleza">
                             </div>
-                        </div>
-                    </div>
-                {% endfor %}
-                </div>
-            </section> -->
-            <!-- =================================================================================================================================================== -->
+                            <div class="p-6 category-title flex-1 flex flex-col justify-center items-center">
 
-
-            <!-- =======================================================SECCION CATEGORIAS========================================================================== -->
-            <section class="container py-5 section-category">
-                <div class="products-title text-center mb-5">
-                    <h2 class="fw-bold">Explora Nuestras Categorías</h2>
-                </div>
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
-                    
-                    <div class="col">
-                        <div class="card text-center bg-info text-white shadow-lg category" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
-                            <div class="card-body category-title">
-                                <h3 class="card-title fw-bold">Salud y Belleza</h3>
-                                <button class="btn btn-light mt-3">Ver más</button>
+                                <a href="{% url 'tienda' %}?category=SALUD" class="text-white block w-full h-full flex flex-col justify-center items-center">
+                                    <h3 class="text-2xl font-bold">Salud y Belleza</h3>
+                                
+                                    <button class="mt-4 py-2 px-4 bg-white text-gray-800 rounded-full hover:bg-gray-100 transition duration-300">Ver más</button>
+                                </a>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col">
-                        <div class="card text-center bg-warning text-dark shadow-lg category" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
-                            <div class="card-body category-title">
-                                <h3 class="card-title fw-bold">Higiene</h3>
-                                <button class="btn btn-dark mt-3">Ver más</button>
+                    <div>
+                        <div class="text-center bg-warning text-gray-800 shadow-xl category rounded-xl flex items-center justify-center" style="min-height: 200px;">
+                            <div class="category-image flex-1 min-w-0 max-w-1/2 relative">
+                                <img src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,h=480,fit=crop/ALp2M1K7MPFOoJyX/1760274492156-Yle4G1j7PvHyDn7V.jpg" class="w-full h-full object-cover rounded-l-xl" alt="Productos de Higiene">
+                            </div>
+                            <div class="p-6 category-title flex-1 flex flex-col justify-center items-center">
+
+                                <a href="{% url 'tienda' %}?category=HIGIENE" class="text-white block w-full h-full flex flex-col justify-center items-center">
+                                    <h3 class="text-2xl font-bold">Higiene</h3>
+                                
+                                    <button class="mt-4 py-2 px-4 bg-gray-800 text-white rounded-full hover:bg-gray-900 transition duration-300">Ver más</button>
+                                </a>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col">
-                        <div class="card text-center bg-danger text-white shadow-lg category" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
-                            <div class="card-body category-title">
-                                <h3 class="card-title fw-bold">Comestibles</h3>
-                                <button class="btn btn-light mt-3">Ver más</button>
+                    <div>
+                        <div class="text-center bg-danger text-white shadow-xl category rounded-xl flex items-stretch" style="min-height: 200px;">
+                            <div class="category-image flex-1 min-w-0 max-w-1/2 relative">
+                                <img src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,h=480,fit=crop/ALp2M1K7MPFOoJyX/1760274487345-Y4LPkqKKyRf23eG2.jpg" class="w-full h-full object-cover rounded-l-xl"  alt="Productos Comestibles">
+                            </div>
+
+                            <div class="p-6 category-title flex-1 flex flex-col justify-center items-center">
+                                
+                                <a href="{% url 'tienda' %}?category=COMESTIBLES" class="text-white block w-full h-full flex flex-col justify-center items-center">
+                                    <h3 class="text-2xl font-bold">Comestibles</h3>
+                                    
+                                    <button class="mt-4 py-2 px-4 bg-white text-gray-800 rounded-full hover:bg-gray-100 transition duration-300">Ver más</button>
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
         </main>
-        <!-- =================================================================================================================================================== -->
 
-        <!-- =======================================================FOOTER DE CONTACTOS========================================================================== -->
-        <footer class="bg-dark text-white pt-4 pb-2 container-fluid">
-            <div class="container text-center">
-                <div class="social-media mb-3">
-                    <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x icons-a"></i></a>
-                    <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x icons-a"></i></a>
-                    <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-facebook fa-2x icons-a"></i></a>
-                    <a href="https://wa.me/584225924400" target="_blank" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x icons-a"></i></a>
+        <footer class="bg-gray-900 text-white py-6 w-full">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <div class="flex justify-center space-x-6 mb-4">
+                    <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white hover:text-danger transition duration-300 icons-a"><i class="fa-brands fa-instagram fa-2x"></i></a>
+                    <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white hover:text-danger transition duration-300 icons-a"><i class="fa-brands fa-tiktok fa-2x"></i></a>
+                    <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white hover:text-danger transition duration-300 icons-a"><i class="fa-brands fa-facebook fa-2x"></i></a>
+                    <a href="https://wa.me/584225924400" target="_blank" class="text-white hover:text-danger transition duration-300 icons-a"><i class="fa-brands fa-whatsapp fa-2x"></i></a>
                 </div>
-                <div class="footer-logo mb-3">
-                    <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens">
+                <div class="mb-4">
+                    <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens" class="mx-auto">
                 </div>
-                <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
-                
+                <p class="text-gray-400 text-sm"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
             </div>
         </footer>
 
 <style>
-    .icons-a:hover{
-        color: #dc3545;
+    @import url('https://fonts.googleapis.com/css2?family=Cascadia+Code:ital,wght@0,200..700;1,200..700&display=swap');
+
+    .titlo-h1{
+        font-family: "Cascadia Code", sans-serif;
+    }
+
+
+    .subtitulo-p{
+        font-family: "Lato", sans-serif;
+        font-weight: 600;
+        font-style: italic;
+    }
+
+    /* Se mantienen los estilos de transición CSS para el hover del footer y las animaciones,
+       mientras que las clases de Bootstrap como 'shadow-sm', 'd-flex', etc., se reemplazan por Tailwind. */
+    .icons-a:hover {
+        color: #dc3545; /* Reemplazando el color explícito por el color 'danger' */
         transform: translateY(-4px);
     }
+    
     /* Animación de entrada para el HERO */
     @keyframes fadeInSlideUp {
         0% { opacity: 0; transform: translateY(20px); }
         100% { opacity: 1; transform: translateY(0); }
     }
-    .title h1 {
-        animation: fadeInSlideUp 0.8s ease-out 0.2s forwards;
-        opacity: 0; /* Asegura que el elemento empiece invisible */
+    /* Aplicamos la animación a la nueva clase */
+    .title .linea-animada {
+        /* Ocultamos inicialmente el span */
+        display: inline-block; /* Necesario para aplicar transform y delay */
+        opacity: 0;
+        animation: fadeInSlideUp 0.8s ease-out forwards;
     }
+
+    /* Aplicamos retrasos secuenciales a cada línea */
+    .title .linea-animada:nth-child(1) {
+        animation-delay: 0.2s; /* Primera línea (TU MEJOR IMPORTACION) */
+    }
+    .title .linea-animada:nth-child(3) { /* El <br> cuenta como :nth-child(2) */
+        animation-delay: 0.5s; /* Segunda línea (TU MEJOR PRECIO) */
+    }
+
+    /* El subtítulo y el botón siguen la secuencia */
     .title p {
-        animation: fadeInSlideUp 0.8s ease-out 0.4s forwards;
+        animation: fadeInSlideUp 0.8s ease-out 0.8s forwards; /* Retraso para que siga al título */
         opacity: 0;
     }
     .boton_store {
         animation: fadeInSlideUp 0.8s ease-out 0.6s forwards;
         opacity: 0;
-        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transición para el hover */
+        /* El hover se maneja con clases de Tailwind como hover:scale-105 y hover:shadow-xl, pero se puede reforzar el box-shadow */
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     .boton_store:hover {
-        transform: scale(1.05); /* Ligeramente más grande al pasar el ratón */
-        box-shadow: 0 0 15px rgba(220, 53, 69, 0.8); /* Sombra que llama la atención */
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(220, 53, 69, 0.8); /* Refuerzo de sombra con color Danger */
     }
 
     /* Animación de hover en la sección "¿Por qué nosotros?" */
@@ -162,19 +179,19 @@
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     .logues:hover {
-        transform: translateY(-8px) scale(1.02); /* Efecto 3D de levantamiento */
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important; /* Sombra más pronunciada */
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important;
     }
 
     /* Animación de hover para las categorías */
     .category {
         transition: transform 0.4s ease, box-shadow 0.4s ease;
-        overflow: hidden; /* Oculta el pseudo-elemento de overlay/luz */
+        overflow: hidden;
         cursor: pointer;
         position: relative;
     }
     .category:hover {
-        transform: scale(1.03); /* Ligeramente más grande */
+        transform: scale(1.03);
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25) !important;
     }
     /* Efecto de "Luz Brillante" en hover */

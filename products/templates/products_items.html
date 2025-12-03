@@ -2,122 +2,120 @@
 {% load static %}
 
 {% block content %}
-<main class="container my-3 my-md-4">
-    <a href="{% url 'tienda' %}" class="d-md-none text-decoration-none text-muted mb-3 d-inline-block">
-        <i class="fa-solid fa-arrow-left me-1"></i> Volver
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-6 md:my-10">
+    <a href="{% url 'tienda' %}" class="md:hidden text-gray-500 mb-4 inline-block hover:text-gray-700 transition duration-150">
+        <i class="fa-solid fa-arrow-left mr-1"></i> Volver
     </a>
 
-    <div class="row mb-5">
-        <div class="col-lg-8 col-md-7 mb-4 **mb-md-4**">
-            <div class="d-flex gap-3 h-100 **flex-column flex-md-row**">
+    <div class="flex flex-col md:flex-row mb-12 md:space-x-8">
+        <div class="w-full md:w-2/3 mb-6 md:mb-0">
+            <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 h-full">
                 
-                <div class="d-none d-md-flex flex-column gap-2" style="width: 70px;">
+                <div class="hidden md:flex flex-col space-y-2" style="width: 70px;">
                     {% if producto.imagen %}
-                    <div class="thumbnail-container active" onmouseover="changeImage('{{ producto.imagen.url }}', this)">
-                        <img src="{{ producto.imagen.url }}" class="img-fluid rounded border" alt="Principal">
+                    <div class="w-full cursor-pointer transition duration-150 thumbnail-container active" onmouseover="changeImage('{{ producto.imagen.url }}', this)">
+                        <img src="{{ producto.imagen.url }}" class="w-full h-full object-contain rounded border" alt="Principal">
                     </div>
                     {% endif %}
 
                     {% for img in imagenes_galeria %}
-                    <div class="thumbnail-container" onmouseover="changeImage('{{ img.imagen.url }}', this)">
-                        <img src="{{ img.imagen.url }}" class="img-fluid rounded border" alt="Imagen extra">
+                    <div class="w-full cursor-pointer transition duration-150 thumbnail-container" onmouseover="changeImage('{{ img.imagen.url }}', this)">
+                        <img src="{{ img.imagen.url }}" class="w-full h-full object-contain rounded border" alt="Imagen extra">
                     </div>
                     {% endfor %}
                 </div>
 
-                <div class="flex-grow-1 d-flex align-items-center justify-content-center bg-white rounded position-relative **p-0 p-md-3**" **style="min-height: 300px; max-height: 600px;"**>
+                <div class="flex-grow bg-white rounded-lg relative flex items-center justify-center p-0 md:p-6 shadow-md" style="min-height: 300px; max-height: 600px;">
                     <img id="mainImage" 
                           src="{{ producto.imagen.url }}" 
-                          class="img-fluid rounded" 
+                          class="w-auto h-full rounded max-w-full max-h-full" 
                           alt="{{ producto.title }}" 
-                          style="max-height: 100%;  width: auto; object-fit: contain;">
+                          style="object-fit: contain;">
                 </div>
             </div>
             
-            <div class="d-flex d-md-none gap-2 overflow-auto **mt-3** pb-2">
+            <div class="flex md:hidden space-x-3 overflow-x-auto mt-4 pb-2">
                 {% if producto.imagen %}
-                <img src="{{ producto.imagen.url }}" onclick="changeImage('{{ producto.imagen.url }}', null)" class="rounded border **cursor-pointer**" style="width: 60px; height: 60px; object-fit: cover;">
+                <img src="{{ producto.imagen.url }}" onclick="changeImage('{{ producto.imagen.url }}', null)" class="rounded border cursor-pointer flex-shrink-0" style="width: 60px; height: 60px; object-fit: cover;">
                 {% endif %}
                 {% for img in imagenes_galeria %}
-                <img src="{{ img.imagen.url }}" onclick="changeImage('{{ img.imagen.url }}', null)" class="rounded border **cursor-pointer**" style="width: 60px; height: 60px; object-fit: cover;">
+                <img src="{{ img.imagen.url }}" onclick="changeImage('{{ img.imagen.url }}', null)" class="rounded border cursor-pointer flex-shrink-0" style="width: 60px; height: 60px; object-fit: cover;">
                 {% endfor %}
             </div>
         </div>
 
-        <div class="col-lg-4 col-md-5 **mb-4 mb-md-5**">
-            <div class="card border-light shadow-sm p-4">
-                <small class="text-muted mb-2 d-block">Nuevo | {{ producto.cantidad }} disponibles</small>
+        <div class="w-full md:w-1/3 mb-6 md:mb-0">
+            <div class="bg-white border border-gray-100 shadow-lg rounded-xl p-6 md:p-8">
+                <small class="text-xs text-gray-500 mb-2 block">{{ producto.cantidad }} unidades disponibles</small>
                 
-                <h1 class="h4 fw-bold text-dark mb-3">
+                <h1 class="text-2xl font-bold text-gray-900 mb-4">
                     {{ producto.title }}
                 </h1>
 
-                <div class="mb-3">
-                    <span class="d-block display-6 fw-normal text-success">
+                <div class="mb-6">
+                    <span class="block text-4xl font-normal text-green-600">
                         ${{ producto.price|floatformat:2 }}
                     </span>
-                    <span class="d-block fs-5 text-warning">
+                    <span class="block text-xl text-warning">
                         Bs {{ producto.price_ves|floatformat:2 }}
                     </span>
                 </div>
 
-                <div class="mb-4">
-                    <p class="text-success fw-bold mb-0"><i class="fa-solid fa-truck me-2"></i>Envío gratis</p>
-                    <small class="text-muted">A todo el país</small>
+                <div class="mb-6">
+                    <p class="text-green-600 font-bold mb-0"><i class="fa-solid fa-truck mr-2"></i>Envío gratis</p>
+                    <small class="text-xs text-gray-500">A todo el país</small>
                 </div>
 
                 <form method="POST" action="{% url 'add_to_cart' %}">
                     {% csrf_token %}
                     <input type="hidden" name="producto_id" value="{{ producto.id }}">
                     
-                    <div class="mb-4">
-                        <label class="form-label fw-bold text-muted" style="font-size: 0.9rem;">Cantidad:</label>
-                        <div class="d-flex align-items-center">
+                    <div class="mb-6">
+                        <label class="block font-bold text-gray-500 text-sm mb-1">Cantidad:</label>
+                        <div class="flex items-center">
                             <input type="number" 
-                                        name="cantidad" 
-                                        id="cantidad-{{ producto.id }}" 
-                                        class="form-control fw-bold me-2" 
-                                        style="width: 80px;"
-                                        value="1" 
-                                        min="1" 
-                                        max="{{ producto.cantidad }}">
-                            <span class="text-muted small">({{ producto.cantidad }} disponibles)</span>
+                                    name="cantidad" 
+                                    id="cantidad-{{ producto.id }}" 
+                                    class="border border-gray-300 rounded-lg p-2 font-bold mr-4 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                                    style="width: 80px;"
+                                    value="1" 
+                                    min="1" 
+                                    max="{{ producto.cantidad }}">
+                            <span class="text-sm text-gray-500">({{ producto.cantidad }} disponibles)</span>
                         </div>
                     </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-danger btn-lg rounded-3">
+                    <div class="space-y-3">
+                        <button type="submit" class="w-full py-3 bg-danger text-white text-xl font-bold rounded-lg hover:bg-red-700 transition duration-150">
                             Comprar ahora
                         </button>
                     </div>
                 </form>
 
-                <div class="mt-4 pt-3 border-top text-center">
-                    <a href="{% url 'tienda' %}" class="text-decoration-none text-muted small">
-                        <i class="fa-solid fa-shop me-1"></i> Ir a la tienda
+                <div class="mt-6 pt-4 border-t border-gray-200 text-center">
+                    <a href="{% url 'tienda' %}" class="text-sm text-gray-500 hover:text-gray-700 transition duration-150">
+                        <i class="fa-solid fa-shop mr-1"></i> Ir a la tienda
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row border-top pt-5">
-        <div class="col-lg-8 col-md-10 mx-auto">
-            <h3 class="mb-4 fw-light text-uppercase" style="letter-spacing: 1px;">Descripción</h3>
+    <div class="border-t border-gray-200 pt-10">
+        <div class="max-w-4xl mx-auto">
+            <h3 class="mb-6 text-2xl font-light uppercase tracking-wider text-gray-800">Descripción</h3>
             
             <div class="description-container">
-                <p class="card-text product-description fs-5 text-secondary clamped-text" id="desc-text" style="white-space: pre-line;">
+                <p class="text-xl text-gray-700 clamped-text" id="desc-text" style="white-space: pre-line;">
                     {{ producto.description }}
                 </p>
             </div>
             
-            <button onclick="toggleDescription()" id="btn-ver-mas" class="btn btn-link text-decoration-none p-0 mt-2 fw-bold">
-                Ver más características <i class="fa-solid fa-chevron-down ms-1"></i>
+            <button onclick="toggleDescription()" id="btn-ver-mas" class="text-blue-600 hover:text-blue-800 p-0 mt-4 font-bold transition duration-150">
+                Ver más características <i class="fa-solid fa-chevron-down ml-1"></i>
             </button>
         </div>
     </div>
-
-    
 </main>
 
 <style>
@@ -132,13 +130,13 @@
     
     .thumbnail-container:hover, 
     .thumbnail-container.active {
-        border-color: #3483fa; /* Azul característico estilo ML */
+        border-color: #3483fa;
         border-width: 2px;
     }
 
     .thumbnail-container img {
         width: 100%;
-        height: 50px; /* Altura fija para uniformidad */
+        height: 50px;
         object-fit: contain;
     }
 
@@ -147,7 +145,7 @@
         overflow: hidden;
         display: -webkit-box;
         -webkit-box-orient: vertical;
-        line-clamp: 8; /* Mostramos un poco más antes de cortar */
+        line-clamp: 8; 
         -webkit-line-clamp: 8;
         mask-image: linear-gradient(180deg, #000 80%, transparent);
         -webkit-mask-image: linear-gradient(180deg, #000 80%, transparent);
@@ -158,40 +156,29 @@
         mask-image: none;
         -webkit-mask-image: none;
     }
-    /* Media Query para mejorar la responsividad en móviles (menos de 768px) */
+    /* Media Query para mejorar la responsividad en móviles (se mantiene la lógica) */
     @media (max-width: 767.98px) {
-        /* Se puede omitir min-height en el div de imagen principal si usamos p-0 p-md-3 en el HTML */
-        /*
-        .col-lg-8 > .d-flex > div:nth-child(2) {
-            min-height: 300px !important; 
-        }
-        */
-
-        /* Añadimos un poco de margen para separar la descripción de la Card */
         .row.border-top.pt-5 {
             padding-top: 3rem !important;
         }
 
-        /* Ajustamos el tamaño de la fuente del título para que no sea tan grande */
         .col-lg-4 h1 {
-            font-size: 1.5rem !important; /* De h4 (1.5rem) a algo más apropiado si es necesario, aunque h4 está bien */
+            font-size: 1.5rem !important;
         }
     }
 </style>
 
 <script>
+    // Se mantiene el JavaScript de galería y descripción ya que es independiente del framework CSS.
+    
     // Función Galería: Cambiar imagen principal
     function changeImage(src, element) {
-        // Cambiar src de la imagen grande
         document.getElementById('mainImage').src = src;
         
         // Si es desktop (hay elemento thumbnail), manejar clase activa
         if (element) {
-            // Quitar clase active de todos
             const thumbnails = document.querySelectorAll('.thumbnail-container');
             thumbnails.forEach(thumb => thumb.classList.remove('active'));
-            
-            // Agregar a la actual
             element.classList.add('active');
         }
     }
@@ -204,11 +191,11 @@
         if (desc.classList.contains('clamped-text')) {
             desc.classList.remove('clamped-text');
             desc.classList.add('expanded-text');
-            btn.innerHTML = 'Ver menos <i class="fa-solid fa-chevron-up ms-1"></i>';
+            btn.innerHTML = 'Ver menos <i class="fa-solid fa-chevron-up ml-1"></i>'; // Usamos ml-1 para Tailwind
         } else {
             desc.classList.add('clamped-text');
             desc.classList.remove('expanded-text');
-            btn.innerHTML = 'Ver más características <i class="fa-solid fa-chevron-down ms-1"></i>';
+            btn.innerHTML = 'Ver más características <i class="fa-solid fa-chevron-down ml-1"></i>';
             
             // Scroll suave hacia el inicio de la descripción
             desc.scrollIntoView({ behavior: 'smooth', block: 'center' });

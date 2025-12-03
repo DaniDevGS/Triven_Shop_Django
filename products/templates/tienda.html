@@ -2,65 +2,75 @@
 {% load static %}
 
 {% block content %}
-        <main class="py-5 bg-light">
-            <div class="container">
-                <h1 class="mb-5 fw-bold text-center text-warning">Explora Todos Nuestros Productos</h1>
+        <main class="py-10 bg-gray-100 min-h-screen">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h1 class="mb-10 text-4xl font-extrabold text-center text-warning">Explora Todos Nuestros Productos</h1>
 
-                <div class="d-lg-none mb-3">
-                    <button class="btn btn-danger w-100 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#filtrosMobile" aria-expanded="false" aria-controls="filtrosMobile">
-                        <i class="fa-solid fa-filter me-2"></i> Mostrar Filtros
+                <div class="lg:hidden mb-4">
+                    <button class="w-full py-3 bg-danger text-white font-bold rounded-xl shadow-lg hover:bg-red-700 transition duration-150" 
+                        type="button" onclick="document.getElementById('filtrosMobile').classList.toggle('hidden')" aria-expanded="false" aria-controls="filtrosMobile">
+                        <i class="fa-solid fa-filter mr-2"></i> Mostrar Filtros
                     </button>
                 </div>
 
-                <div class="row">
-                    <div class="col-lg-3 mb-4 collapse d-lg-block" id="filtrosMobile">
-                <div class="card shadow-lg sticky-lg-top" style="top: 80px; z-index: 1;"> <div class="card-header bg-danger text-white fw-bold d-flex justify-content-between align-items-center">
-                        <span><i class="fa-solid fa-filter me-2"></i>Filtros</span>
-                        <button type="button" class="btn-close btn-close-white d-lg-none" data-bs-toggle="collapse" data-bs-target="#filtrosMobile" aria-label="Close"></button>
+                <div class="flex flex-col lg:flex-row lg:space-x-8">
+                    <div class="w-full lg:w-1/4 mb-6 transition-all duration-300 ease-in-out lg:block hidden" id="filtrosMobile">
+                        <div class="bg-white shadow-xl rounded-xl sticky lg:top-20 z-20 border border-gray-200">
+                            <div class="p-4 bg-danger text-white font-bold rounded-t-xl flex justify-between items-center">
+                                <span><i class="fa-solid fa-filter mr-2"></i>Filtros</span>
+                                <button type="button" class="text-white lg:hidden text-2xl font-bold cursor-pointer hover:scale-110 transition" 
+                                        onclick="document.getElementById('filtrosMobile').classList.add('hidden')" aria-label="Close">&times;</button>
+                            </div>
+
+                            <div class="p-5">
+                                
+                                <div class="mb-6 pb-4 border-b border-gray-200">
+                                    <h5 class="text-xl font-bold text-gray-800 mb-3 border-l-4 border-warning pl-2">Categorías</h5>
+                                    <ul class="space-y-1 text-sm list-unstyled">
+                                        <li>
+                                            <a href="{% url 'tienda' %}?min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}" class="block py-1 px-2 rounded-lg hover:bg-red-50 transition duration-150
+                                                {% if not current_category %}text-danger font-extrabold bg-red-50{% else %}text-gray-600{% endif %}">Todas las categorías</a>
+                                        </li>
+                                        {% for codigo, nombre in categorias %}
+                                        <li>
+                                            <a href="?category={{ codigo }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}" class="block py-1 px-2 rounded-lg hover:bg-red-50 transition duration-150
+                                                {% if current_category == codigo %}text-danger font-extrabold bg-red-50{% else %}text-gray-600{% endif %}">{{ nombre }}</a>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+
+                                <div class="pb-2">
+                                    <h5 class="text-xl font-bold text-gray-800 mb-3 border-l-4 border-warning pl-2">Rango de Precio</h5>
+                                    <form method="GET" action="{% url 'tienda' %}">
+                                        {% if current_category %}
+                                            <input type="hidden" name="category" value="{{ current_category }}">
+                                        {% endif %}
+
+                                        <div class="mb-4 grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label for="min_price" class="block text-xs font-semibold text-danger mb-1">Mínimo ($)</label>
+                                                <input type="number" name="min_price" id="min_price" class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-warning focus:ring focus:ring-warning focus:ring-opacity-50 text-gray-700" 
+                                                    value="{{ min_price|default:'0' }}" min="0" step="1">
+                                            </div>
+                                            <div>
+                                                <label for="max_price" class="block text-xs font-semibold text-danger mb-1">Máximo ($)</label>
+                                                <input type="number" name="max_price" id="max_price" class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-warning focus:ring focus:ring-warning focus:ring-opacity-50 text-gray-700" 
+                                                    value="{{ max_price|default:'1500' }}" min="0" step="1">
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="w-full py-2 border-2 border-danger text-danger rounded-lg font-semibold hover:bg-danger hover:text-white transition duration-150 mt-2 text-base shadow-sm hover:shadow-lg">Aplicar Filtro</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="card-body">
+                    <div class="w-full lg:w-3/4">
                         
-                        <div class="mb-4 pb-2 border-bottom">
-                            <h5 class="fw-bold text-dark mb-3">Categorías</h5>
-                            <ul class="list-unstyled small">
-                                <li><a href="{% url 'tienda' %}?min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}" class="text-decoration-none d-block py-1 
-                                        {% if not current_category %}text-warning fw-bold{% else %}text-muted{% endif %}">Todas las categorías</a></li>
-                                {% for codigo, nombre in categorias %}
-                                <li><a href="?category={{ codigo }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}" class="text-decoration-none d-block py-1 {% if current_category == codigo %}text-warning fw-bold{% else %}text-muted{% endif %}">{{ nombre }}</a></li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-
-                        <div class="mb-4 pb-2 border-bottom">
-                            <h5 class="fw-bold text-dark mb-3">Rango de Precio</h5>
-                            <form method="GET" action="{% url 'tienda' %}">
-                                {% if current_category %}
-                                    <input type="hidden" name="category" value="{{ current_category }}">
-                                {% endif %}
-
-                                <div class="mb-3">
-                                    <label for="min_price" class="form-label small text-danger">Precio Mínimo ($)</label>
-                                    <input type="number" name="min_price" id="min_price" class="form-control form-control-sm text-warning" 
-                                           value="{{ min_price|default:'0' }}" min="0" step="1">
-                                </div>
-
-                                <div class="col">
-                                    <label for="max_price" class="form-label small text-danger">Precio Máximo ($)</label>
-                                    <input type="number" name="max_price" id="max_price" class="form-control form-control-sm text-warning" 
-                                           value="{{ max_price|default:'1500' }}" min="0" step="1">
-                                </div>
-
-                                <button type="submit" class="btn btn-sm btn-outline-danger w-100 mt-3">Aplicar Filtro</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                    </div>
-
-                    <div class="col-lg-9">
-                        <div class="mb-4">
-                            <form method="GET" action="{% url 'tienda' %}" class="input-group input-group-lg shadow-sm border border-danger rounded-pill overflow-hidden">
+                        <div class="mb-6">
+                            <form method="GET" action="{% url 'tienda' %}" class="flex shadow-md border-2 border-danger rounded-full overflow-hidden">
                                 
                                 {% if current_category %}
                                     <input type="hidden" name="category" value="{{ current_category }}">
@@ -72,132 +82,145 @@
                                     <input type="hidden" name="max_price" value="{{ max_price }}">
                                 {% endif %}
 
-                                <input type="text" name="q" class="form-control border-0 p-3 text-dark fw-bold" 
-                                placeholder="Busca productos..." aria-label="Término de búsqueda" value="{{ search_query|default:'' }}">
+                                <input type="text" name="q" class="flex-grow px-5 py-3 text-gray-800 font-medium focus:outline-none text-base sm:text-lg" 
+                                    placeholder="Busca productos..." aria-label="Término de búsqueda" value="{{ search_query|default:'' }}">
                                 
-                                <button class="btn btn-danger px-3 px-md-4" type="submit" id="button-addon2">
-                                    <i class="fa-solid fa-magnifying-glass"></i> <span class="d-none d-sm-inline ms-1">Buscar</span>
+                                <button class="bg-danger text-white px-4 md:px-6 py-3 font-semibold hover:bg-red-700 transition duration-150 transform hover:scale-102" type="submit" id="button-addon2">
+                                    <i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline ml-1">Buscar</span>
                                 </button>
                             </form>
                         </div>
                         
-                        <!-- =========================================================MOSTRAR PRODUCTOS=========================================================== -->
-                        <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border border-info">
-                            <p class="mb-0 text-muted small">Mostrando {{ cantidad }} productos disponibles</p>
+                        <div class="text-black font-black flex justify-end items-center mb-6 p-3 bg-white rounded-xl shadow-md border-b-2 border-warning">
+                            <p class="text-sm text-gray-500">Mostrando <strong class="text-danger font-extrabold text-lg">{{ cantidad }}</strong> productos disponibles</p>
                         </div>
-                        <!-- ======================================================================================================================================= -->
 
-                        <!-- =========================================================PRODUCTOS CONTENEDOR=========================================================== -->
-                        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-3 g-4 articles-products">
-                            <!-- =========================================================PRODUCTOS=========================================================== -->
-                        {% for producto in productos %}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 articles-products">
+                            {% for producto in productos %}
                             {% if user.is_authenticated %}     
-                            <div class="col">
-                                <a href="{% url 'products_items' producto.id %}" class="text-decoration-none text-dark d-block h-100">
-                                    <div class="card h-100 shadow-lg products hover-shadow-lg">
-                                        <img src="{{ producto.imagen.url }}" class="card-img-top products-img" alt="{{ producto.title }}" style="height: 250px; object-fit: cover;">
-                                        <div class="card-body d-flex flex-column products-info">
-                                            <h5 class="card-title product-title">{{ producto.title }}</h5>
-                                            <p class="card-text product-description flex-grow-1">{{ producto.description|truncatewords:20 }}</p>
-                                            <span class="fs-4 fw-bold text-success price">{{ producto.price }}$</span>
-                                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                                
-                                                <span class="fs-4 fw-bold text-warning price-bolivar">({{ producto.price_ves|floatformat:2 }}Bs)</span>
+                            <div class="hover:scale-[1.01] transition duration-300 ease-in-out">
+                                <a href="{% url 'products_items' producto.id %}" class="block text-gray-800 h-full">
+                                    <div class="bg-white h-full shadow-xl products rounded-xl overflow-hidden border border-gray-100 hover:border-danger">
+                                        <img src="{{ producto.imagen.url }}" class="products-img w-full" alt="{{ producto.title }}" style="height: 250px; object-fit: cover;">
+                                        <div class="p-4 flex flex-col products-info">
+                                            <h5 class="producto-title text-xl font-extrabold truncate mb-1">{{ producto.title }}</h5>
+                                            <p class="producto-description text-sm text-gray-600 flex-grow producto_descripcion mb-3">{{ producto.description|truncatewords:20 }}</p>
+                                            
+                                            <div class="flex flex-col mt-2">
+                                                <span class="text-3xl font-bold text-green-600 price">${{ producto.price }}</span>
+                                                <span class="text-lg font-bold text-warning price-bolivar mt-1">({{ producto.price_ves|floatformat:2 }}Bs)</span>
                                             </div>
                                         </div>
                                     </div>
                                 </a>
                             </div>
                             {% else %}
-                            <div class="col">
-                                <a href="{% url 'signup' %}" class="text-decoration-none text-dark d-block h-100">
-                                    <div class="card h-100 shadow-lg products hover-shadow-lg">
-                                        <img src="{{ producto.imagen.url }}" class="card-img-top products-img" alt="{{ producto.title }}" style="height: 250px; object-fit: cover;">
-                                        <div class="card-body d-flex flex-column products-info">
-                                            <h5 class="card-title product-title">{{ producto.title }}</h5>
-                                            <p class="card-text product-description flex-grow-1 producto_descripcion">{{ producto.description }}</p>
-                                            <span class="fs-4 fw-bold text-success price">{{ producto.price }}$</span>
-                                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                                
-                                                <span class="fs-4 fw-bold text-warning price-bolivar">({{ producto.price_ves|floatformat:2 }}Bs)</span>
+                            <div class="hover:scale-[1.01] transition duration-300 ease-in-out">
+                                <a href="{% url 'signup' %}" class="block text-gray-800 h-full">
+                                    <div class="bg-white h-full shadow-xl products rounded-xl overflow-hidden border border-gray-100 hover:border-danger">
+                                        <img src="{{ producto.imagen.url }}" class="products-img w-full" alt="{{ producto.title }}" style="height: 250px; object-fit: cover;">
+                                        <div class="p-4 flex flex-col products-info">
+                                            <h5 class="producto-title text-xl font-extrabold truncate mb-1">{{ producto.title }}</h5>
+                                            <p class="producto-description text-sm text-gray-600 flex-grow producto_descripcion mb-3">{{ producto.description|truncatewords:20 }}</p>
+                                            
+                                            <div class="flex flex-col mt-2">
+                                                <span class="text-3xl font-bold text-green-600 price">${{ producto.price }}</span>
+                                                <span class="text-lg font-bold text-warning price-bolivar mt-1">({{ producto.price_ves|floatformat:2 }}Bs)</span>
                                             </div>
                                         </div>
                                     </div>
                                 </a>
                             </div>
-
                             {% endif %}
                         {% endfor %}
-
-                            <!-- ==================================================================================================================================== -->
-                        <!-- ======================================================================================================================================== -->
                         </div>
-                        
                     </div>
-                    </div>
+                </div>
             </div>
         </main>
 
-        <footer class="bg-dark text-white pt-4 pb-2 container-fluid">
-            <div class="container text-center">
-                <div class="social-media mb-3">
-                    <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white mx-2"><i class="fa-brands fa-instagram fa-2x icons-a"></i></a>
-                    <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white mx-2"><i class="fa-brands fa-tiktok fa-2x icons-a"></i></a>
-                    <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white mx-2 icons-a"><i class="fa-brands fa-facebook fa-2x icons-a"></i></a>
-                    <a href="https://wa.me/584225924400" target="_blank" class="text-white mx-2"><i class="fa-brands fa-whatsapp fa-2x icons-a"></i></a>
+        <footer class="bg-gray-900 text-white py-6 w-full">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <div class="flex justify-center space-x-6 mb-4">
+                    <a href="https://www.instagram.com/triven.shop?igsh=amFvczBxamk3emli" target="_blank" class="text-white hover:text-danger transition duration-300 icons-a"><i class="fa-brands fa-instagram fa-2x"></i></a>
+                    <a href="https://www.tiktok.com/@triven.shop?_r=1&_t=ZM-91K5VzJkkH2" target="_blank" class="text-white hover:text-danger transition duration-300 icons-a"><i class="fa-brands fa-tiktok fa-2x"></i></a>
+                    <a href="https://www.facebook.com/share/14Q8grURUV9/" target="_blank" class="text-white hover:text-danger transition duration-300 icons-a"><i class="fa-brands fa-facebook fa-2x"></i></a>
+                    <a href="https://wa.me/584225924400" target="_blank" class="text-white hover:text-danger transition duration-300 icons-a"><i class="fa-brands fa-whatsapp fa-2x"></i></a>
                 </div>
-                <div class="footer-logo mb-3">
-                    <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens">
+                <div class="mb-4">
+                    <img src="{% static 'img/Logo_Triven.png' %}" width="70" alt="Logotipo Trivens" class="mx-auto">
                 </div>
-                <p class="text-center"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
-                
+                <p class="text-gray-400 text-sm"><small>&copy; 2025 Triven Smart Shop. Todos los derechos reservados.</small></p>
             </div>
         </footer>
+
 <style>
-    /* Estilo para recortar descripción en tarjetas */
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+
+    .producto-title{
+        font-family: "Open Sans", sans-serif;
+        font-optical-sizing: auto;
+        font-weight: 800;
+        font-style: normal;
+        font-variation-settings:
+            "wdth" 100;
+    }
+
+    .producto-description{
+        font-family: "Roboto Mono", monospace;
+        font-optical-sizing: auto;
+        font-weight: 500;
+        font-style: normal;
+    }
+
+    /* Estilo para recortar descripción en tarjetas (se mantiene ya que es CSS nativo) */
     .producto_descripcion{
         overflow: hidden;
         display: -webkit-box;
         -webkit-box-orient: vertical;
         line-clamp: 3;
         -webkit-line-clamp: 3;
-        margin-bottom: 0.5rem;
     }
 
     .icons-a:hover{
         color: #dc3545;
         transform: translateY(-4px);
     }
-    /* Animación de interacción para las tarjetas de producto */
+    
+    /* Animación de interacción para las tarjetas de producto (Se mantiene y se complementa con hover de Tailwind) */
     .products {
-        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border 0.3s ease-in-out;
     }
     .products:hover {
-        transform: translateY(-5px) scale(1.01); /* Ligeramente se levanta y agranda */
-        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1); /* Sombra que simula elevación */
-        border: 1px solid #dc3545; /* Resalta el borde para mejor indicación */
+        transform: translateY(-5px) scale(1.01);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid #dc3545; /* Usa el color Danger */
     }
 
-    /* Animación de hover para los enlaces de categorías en el filtro */
+    /* Animación de hover para los enlaces de categorías en el filtro (se mantiene) */
     .list-unstyled a {
-        transition: color 0.2s ease, padding-left 0.2s ease;
+        transition: color 0.2s ease, padding-left 0.2s ease, background-color 0.2s ease;
         position: relative;
         padding-left: 10px;
     }
     .list-unstyled a:hover {
-        color: #dc3545 !important; /* Rojo al pasar el ratón */
-        padding-left: 15px; /* Pequeño deslizamiento a la derecha */
+        color: #dc3545 !important; /* Color Danger */
+        padding-left: 15px;
     }
     .list-unstyled a:hover::before {
         content: '•';
         position: absolute;
         left: 0;
-        color: #dc3545;
+        color: #dc3545; /* Color Danger */
     }
-    /* Estilo del botón de búsqueda al hacer hover */
+
+    /* Estilo del botón de búsqueda al hacer hover (se mantiene la clase para la animación transform) */
     #button-addon2 {
-        transition: background-color 0.3s ease, transform 0.2s ease;
+        transition: transform 0.2s ease;
     }
-    #button-addon2:hover { background-color: #c82333; transform: scale(1.02); }
+    #button-addon2:hover { 
+        transform: scale(1.02); 
+    }
 </style>
 {% endblock %}

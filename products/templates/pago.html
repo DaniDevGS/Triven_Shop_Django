@@ -1,23 +1,22 @@
 {% extends 'base.html' %}
 {% block content %}
 <style>
-    /* Estilos específicos del spinner (se mantienen ya que son complejos y no son fáciles de replicar con clases atómicas puras de Tailwind sin configurar un plugin) */
+    
     #imagen_previa {
         max-width: 100%;
         height: auto;
         max-height: 250px; 
         display: none; 
         margin-top: 15px;
-        border: 2px solid #dc3545; /* Usaremos 'border-red-600' en la clase, pero este estilo interno lo sobrescribe */
-        border-radius: .3rem; /* rounded-md */
+        border: 2px solid #dc3545;
+        border-radius: .3rem;
         object-fit: contain;
     }
 
     #spinner-container {
-        display: none; /* Inicialmente oculto */
+        display: none;
     }
     
-    /* Inicio de estilos del dot-spinner (MANTENER) */
     .dot-spinner {
         --uib-size: 2.8rem;
         --uib-speed: .9s;
@@ -121,7 +120,7 @@
             opacity: 1;
         }
     }
-    /* Fin de estilos del dot-spinner */
+    
 
 </style>
 
@@ -227,7 +226,7 @@
 </main>
 
 <script>
-    // Script para previsualización de imagen (se mantiene igual, no usa clases de estilo de Bootstrap)
+    
     document.getElementById('input_imagen').addEventListener('change', function(event) {
         const input = event.target;
         const imagenPrevia = document.getElementById('imagen_previa');
@@ -237,17 +236,16 @@
             
             reader.onload = function(e) {
                 imagenPrevia.src = e.target.result;
-                imagenPrevia.style.display = 'block'; // Muestra la imagen
+                imagenPrevia.style.display = 'block';
             }
             
             reader.readAsDataURL(input.files[0]);
         } else {
             imagenPrevia.src = '#';
-            imagenPrevia.style.display = 'none'; // Oculta si no hay archivo
+            imagenPrevia.style.display = 'none';
         }
     });
 
-    // 🎯 Script para manejo de envío y Spinner (Se adapta para remover las clases de spinner de Bootstrap)
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('payment-form');
         const submitButton = document.getElementById('submit-button');

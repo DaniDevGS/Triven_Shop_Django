@@ -15,8 +15,8 @@ import uuid
 from django.db import transaction 
 import urllib.parse 
 
-#===================================DJANGO ==================================================================
-# ===============================================================================================================
+#===================================DJANGO MANAGER========================================================
+
 
 def home(request):
     """Renderiza la página de inicio.
@@ -85,7 +85,7 @@ def product_detail(request, products_id:int):
 
     if request.method == 'GET':
         form = ProductForm(instance=producto)
-        # CAMBIO IMPORTANTE: Cambié 'productos' a 'product' para que coincida con tu HTML
+        
         return render(request, 'manager/products_detail.html', {'product': producto, 'form': form}) 
     
     else:
@@ -94,13 +94,11 @@ def product_detail(request, products_id:int):
             if form.is_valid():
                 form.save()
 
-                # === LÓGICA PARA AGREGAR MÁS IMÁGENES AL EDITAR ===
+                
                 images = form.cleaned_data.get('imagenes_extra')
                 if images:
                     for img in images:
                         ProductoImagen.objects.create(producto=producto, imagen=img)
-                # ==================================================
-
                 return redirect('products')
             else:
                 return render(request, 'manager/products_detail.html', {
@@ -115,12 +113,9 @@ def product_detail(request, products_id:int):
             })
     
 def sent_product(request, products_id:int):
-    # Productos enviados
-    # Se asegura de obtener el producto SOLO si pertenece al usuario logueado
+    
     producto = get_object_or_404(Producto, pk=products_id)
     if request.method == 'POST':
-        # La condición se cumple: el producto existe y pertenece al usuario.
-        # Se marca como 'enviado' (datecompleted)
         producto.datecompleted = timezone.now()
         producto.save()
         return redirect('products')
@@ -610,6 +605,7 @@ def compra_productos(request):
             message += "\n*Adjunté el capture del pago a esta conversación.*"
             
             encoded_message = urllib.parse.quote(message)
+            
             whatsapp_url = f"https://wa.me/{whatsapp_number}?text={encoded_message}"
             
             # 5. Limpiar sesión y mostrar éxito

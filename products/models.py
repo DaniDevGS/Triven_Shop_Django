@@ -32,7 +32,7 @@ class Producto(models.Model):
 # === NUEVO MODELO PARA LA GALERÍA ===
 class ProductoImagen(models.Model):
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='imagenes_galeria')
-    imagen = models.ImageField(upload_to='productos_galeria/')
+    imagen = models.ImageField(upload_to='productos_galeria/', null=True, blank=True)
     
     def __str__(self):
         return f"Imagen extra de {self.producto.title}"

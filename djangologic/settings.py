@@ -13,7 +13,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 import dj_database_url
+from dotenv import load_dotenv
 
+# Carga las variables del archivo .env
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,23 +26,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECRET_KEY = 'django-insecure-60ys4jw_^x6^2*wdj12gn1!@4keatrrq%lgdtbrsa^svv98i9_'
-SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
+SECRET_KEY = os.getenv('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-# DEBUG = 'RENDER' not in os.environ
-
-# ALLOWED_HOSTS = []
-
+#?============================================Desarrollo================================================
 DEBUG = True 
+ALLOWED_HOSTS = ['*']
 
-# ... luego asegúrate de que esto siga siendo correcto
-ALLOWED_HOSTS = ['*'] # Necesitarás esto si DEBUG=True
+#?============================================Produccion================================================
+# DEBUG = False
 
-# De RENDER
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+# ALLOWED_HOSTS = ['trivenstores.com','www.trivenstores.com','localhost','3.131.33.181']
+
+# CSRF_TRUSTED_ORIGINS = [
+#     'http://3.131.33.181',
+#     'http://trivenstores.com',
+#     'http://www.trivenstores.com',
+# ]
+
+# CSRF_COOKIE_DOMAIN = '.trivenstores.com'  # El punto inicial permite subdominios
+# CSRF_COOKIE_SECURE = False  # Cambia a True solo cuando tengas HTTPS (SSL)
+# SESSION_COOKIE_SECURE = False # Cambia a True solo cuando tengas HTTPS (SSL)
+
 
 # Application definition
 
@@ -151,9 +158,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-ve'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Caracas'
 
 USE_I18N = True
 
